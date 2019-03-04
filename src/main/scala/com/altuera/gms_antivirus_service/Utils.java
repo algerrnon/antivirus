@@ -1,4 +1,4 @@
-package com.altuera.servlet2;
+package com.altuera.gms_antivirus_service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

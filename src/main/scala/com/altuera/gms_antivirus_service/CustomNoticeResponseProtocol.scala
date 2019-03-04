@@ -1,4 +1,4 @@
-package com.altuera.servlet2
+package com.altuera.gms_antivirus_service
 
 
 import spray.json.{DefaultJsonProtocol, JsonFormat, _}

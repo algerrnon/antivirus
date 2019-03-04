@@ -1,10 +1,10 @@
 organization := "com.altuera"
-name := "servlet2"
+name := "gms_antivirus_service"
 version := "0.0.4"
 
 scalaVersion := "2.12.8"
 
-mainClass in Compile := Some("com.altuera.servlet2.UploadServlet")
+mainClass in Compile := Some("com.altuera.gms_antivirus_service.UploadServlet")
 
 scalacOptions += "-Ypartial-unification" // 2.11.9+
 scalacOptions += "-feature"
