@@ -1,0 +1,88 @@
+### Java template
+*.class
+
+# Package Files #
+*.jar
+*.war
+*.ear
+
+# IntelliJ
+out/
+.idea/
+
+*.iml
+
+### Maven template
+target/
+
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+
+# Avoid ignoring Maven wrapper jar file (.jar files are usually ignored)
+!/.mvn/wrapper/maven-wrapper.jar
+
+
+# Gradle
+# ------
+.gradle
+/build
+/buildSrc/build
+/buildSrc/subprojects/*/build
+/subprojects/*/build
+/subprojects/docs/src/samples/*/*/build
+/subprojects/internal-android-performance-testing/build-android-libs
+
+# Logs
+/logs
+
+####
+# sbt
+# (may want to keep parts of 'project')
+bin/
+project/target/
+project/project/
+build/
+
+# eclipse
+build
+.classpath
+.project
+.settings
+.worksheet
+
+# intellij idea
+*.log
+*.iml
+*.ipr
+*.iws
+.idea
+
+# mac
+.DS_Store
+
+# other?
+.history
+.scala_dependencies
+.cache
+.cache-main
+
+#general
+*.class
+
+/.idea/
+/.idea_modules/
+target
+/project/typesafe.properties
+/project/activator-*
+/logs/
+/RUNNING_PID
+*.iml
+.DS_Store
+.sbtserver*

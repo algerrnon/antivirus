@@ -1,0 +1,10 @@
+{
+  "channel": "/service/chatV2/request-chat-v2",
+  "data": {
+	"operation": "customNotice",
+	"message": "77777",
+	"secureKey": "NSgiKiYfAV4XDRMzYCVtP15EQghdQnR+N2p0DhQSTFZAd3sxancJRQ9EVTZ0eBBqAi8wREJVQAN7L29zXEFFFSBGDHxnF3NcPiI="
+  },
+  "id": "88887897979",
+  "clientId": "4ol2ebwik5cflq1qgkvo0bmy54m"
+}
