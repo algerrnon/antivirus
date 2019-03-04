@@ -111,3 +111,4 @@ jetty:stop или tomcat:stop
 Для сборки war-файла 
 ```
 sbt package 
+```
