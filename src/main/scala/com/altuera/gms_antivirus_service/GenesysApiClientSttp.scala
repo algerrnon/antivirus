@@ -19,15 +19,15 @@ class GenesysApiClientSttp(url: String) {
 
 		var requestBody =
 			s"""{
-				 				 				 				 				 	|  "channel": "/service/chatV2/request-chat-v2",
-				 				 				 				 				 	|  "data": {
-				 				 				 				 				 	|	"operation": "customNotice",
-				 				 				 				 				 	|	"message": "$message",
-				 				 				 				 				 	|	"secureKey": "$secureKey"
-				 				 				 				 				 	|  },
-				 				 				 				 				 	|  "id": "$id",
-				 				 				 				 				 	|  "clientId": "$clientId"
-				 				 				 				 				 	|}""".stripMargin
+				 				 				 				 				 				 	|  "channel": "/service/chatV2/request-chat-v2",
+				 				 				 				 				 				 	|  "data": {
+				 				 				 				 				 				 	|	"operation": "customNotice",
+				 				 				 				 				 				 	|	"message": "$message",
+				 				 				 				 				 				 	|	"secureKey": "$secureKey"
+				 				 				 				 				 				 	|  },
+				 				 				 				 				 				 	|  "id": "$id",
+				 				 				 				 				 				 	|  "clientId": "$clientId"
+				 				 				 				 				 				 	|}""".stripMargin
 		val response = sttp
 			.post(sendCustomNoticeUri)
 			.contentType("application/json;charset=utf-8")
