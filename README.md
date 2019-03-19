@@ -63,7 +63,7 @@ http://localhost:8080/genesys/cometd
 то система отправляет файл в чат
 при помощи [Genesys Chat API Version 2 with CometD](https://docs.genesys.com/Documentation/GMS/8.5.2/API/ChatAPIv2CometD), 
 вызывая операцию Upload File
-(operation	fileUpload)
+(operation    fileUpload)
 
 Запрос выполняется по адресу:
 ```
