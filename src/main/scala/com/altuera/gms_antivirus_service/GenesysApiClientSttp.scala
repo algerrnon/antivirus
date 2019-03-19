@@ -3,7 +3,6 @@ package com.altuera.gms_antivirus_service
 import java.io.File
 import java.lang.invoke.MethodHandles
 
-import com.google.common.io.Resources
 import com.softwaremill.sttp._
 import org.slf4j.LoggerFactory
 
@@ -61,18 +60,3 @@ class GenesysApiClientSttp(url: String) {
 	}
 }
 
-object GenesysApiClientSttp {
-	def main(args: Array[String]): Unit = {
-		var secureKey = "NSgiKiYfAV4XDRMzYCVtP15EQghXRncrYWcnDUIRTQQTcn5lOXpVEQ9EVTZ0eBBodShGQ0NVQ3d+L29zXEFLFSBFcB4VDnNcRSo="
-		val fileUrl = Resources.getResource("api_client/test.txt")
-		val file = new File(fileUrl.getPath)
-		val cookie = "BAYEUX_BROWSER=son96j6ur94c86re"
-		val genesysApiClient: GenesysApiClientSttp = new GenesysApiClientSttp("http://gen01:8090/")
-		println(genesysApiClient.uploadFileToChat(file, secureKey, cookie))
-
-		val id = "sdfvsfvsfdvdf"
-		val clientId = "g17gx1cpj4le9v1ua6k2ockma3k"
-		val message = "sdfvsfdvsf"
-		println(genesysApiClient.sendCustomNotice(id, clientId, message, secureKey, cookie))
-	}
-}
