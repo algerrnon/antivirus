@@ -37,11 +37,11 @@ class GenesysApiClientSttp(url: String) {
     response.body match {
       case Left(obj) => {
         log.warn(obj)
-        return false
+        false
       }
       case Right(obj) => {
         log.trace(obj)
-        return true
+        true
       }
     }
   }

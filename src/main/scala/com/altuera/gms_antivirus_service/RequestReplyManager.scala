@@ -16,7 +16,7 @@ import scala.util.{Failure, Success, Try}
 
 object RequestReplyManager {
   val baseDirectoryForTemporaryDirs = Utils.createDirIfNotExist(Configuration.uploadDir)
-  val genesysApiClientSttp = new GenesysApiClientSttp(Configuration.genesysApiBaseUrl)
+  val genesysClient = new GenesysApiClientSttp(Configuration.genesysApiBaseUrl)
 
 }
 
@@ -29,7 +29,13 @@ class RequestReplyManager(request: HttpServletRequest,
   def sendCustomNoticeToChat(): Unit = {
     val id = String.valueOf(UUID.randomUUID)
     val cookieHeaderValue = data.requestHeaders.get("cookie")
-    val success = RequestReplyManager.genesysApiClientSttp.sendCustomNotice(id, data.clientId, Configuration.customNoticeMessage, data.secureKey, cookieHeaderValue)
+    val success = RequestReplyManager.genesysClient.sendCustomNotice(
+      id,
+      data.clientId,
+      Configuration.customNoticeMessage,
+      data.secureKey,
+      cookieHeaderValue)
+
     if (!success) {
       val message = "No send custom notice"
       log.warn(message)
@@ -39,7 +45,7 @@ class RequestReplyManager(request: HttpServletRequest,
 
   def uploadFileToChat(): Response[String] = {
     val cookieHeaderValue = data.requestHeaders.get("cookie")
-    RequestReplyManager.genesysApiClientSttp.uploadFileToChat(data.file, data.secureKey, cookieHeaderValue)
+    RequestReplyManager.genesysClient.uploadFileToChat(data.file, data.secureKey, cookieHeaderValue)
   }
 
   def copyGenesysResponseToServletResponse(genesysFileUploadResponse: Response[String]): Unit = {
@@ -64,8 +70,13 @@ class RequestReplyManager(request: HttpServletRequest,
     Utils.deleteFolderRecursively(data.file)
   }
 
-  def validateServletRequestData() = {
-    DataValidator.validateServletRequestData(this.data)
+  private def validateServletRequestData() = {
+    DataValidator.validateServletRequestData(this.data) match {
+      case Success(lines) => log.trace("request is valid")
+      case Failure(exception) =>
+        log.error("Request not valid!")
+        throw exception
+    }
   }
 
   private def getServletRequestData(): Data = {
@@ -151,50 +162,51 @@ class RequestReplyManager(request: HttpServletRequest,
   case class Data(secureKey: String, clientId: String, requestHeaders: util.Map[String, String], file: File)
 
   object DataValidator {
+
+    def validFile(file: File): Try[File] = {
+      if (file == null || !file.exists) {
+        Failure(new ValidateServletRequestDataException("uploaded file is null or not exist"))
+      }
+      else {
+        Success(file)
+      }
+    }
+
+    def validSecureKey(secureKey: String): Try[String] = {
+      if (secureKey == null || secureKey.isEmpty) {
+        Failure(new ValidateServletRequestDataException("secure key is null or empty"))
+      }
+      else {
+        Success(secureKey)
+      }
+    }
+
+    def validClientId(clientId: String): Try[String] = {
+      if (clientId == null || clientId.isEmpty) {
+        Failure(new ValidateServletRequestDataException("clientId is null or empty"))
+      }
+      else {
+        Success(clientId)
+      }
+    }
+
+    def validRequestHeaders(requestHeaders: util.Map[String, String]): Try[util.Map[String, String]] = {
+      if (requestHeaders == null || requestHeaders.isEmpty) {
+        Failure(new ValidateServletRequestDataException("requestHeaders is null or empty"))
+      }
+      if (requestHeaders.containsKey("cookie")) {
+        val cookie = requestHeaders.get("cookie")
+        if (cookie == null || cookie.isEmpty) {
+          Failure(new ValidateServletRequestDataException("cookie header is null or empty"))
+        }
+      }
+      else {
+        Failure(new ValidateServletRequestDataException("cookie header is not exist"))
+      }
+      Success(requestHeaders)
+    }
+
     def validateServletRequestData(data: Data): Try[Data] = {
-
-      def validSecureKey(secureKey: String): Try[String] = {
-        if (secureKey == null || secureKey.isEmpty) {
-          Failure(new ValidateServletRequestDataException("secure key is null or empty"))
-        }
-        else {
-          Success(secureKey)
-        }
-      }
-
-      def validFile(file: File): Try[File] = {
-        if (file == null || !file.exists) {
-          Failure(new ValidateServletRequestDataException("uploaded file is null or not exist"))
-        }
-        else {
-          Success(file)
-        }
-      }
-
-      def validClientId(clientId: String): Try[String] = {
-        if (clientId == null || clientId.isEmpty) {
-          Failure(new ValidateServletRequestDataException("clientId is null or empty"))
-        }
-        else {
-          Success(clientId)
-        }
-      }
-
-      def validRequestHeaders(requestHeaders: util.Map[String, String]): Try[util.Map[String, String]] = {
-        if (requestHeaders == null || requestHeaders.isEmpty) {
-          Failure(new ValidateServletRequestDataException("requestHeaders is null or empty"))
-        }
-        if (requestHeaders.containsKey("cookie")) {
-          val cookie = requestHeaders.get("cookie")
-          if (cookie == null || cookie.isEmpty) {
-            Failure(new ValidateServletRequestDataException("cookie header is null or empty"))
-          }
-        }
-        else {
-          Failure(new ValidateServletRequestDataException("cookie header is not exist"))
-        }
-        Success(requestHeaders)
-      }
 
       for {
         secureKey <- validSecureKey(data.secureKey)
