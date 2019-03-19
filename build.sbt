@@ -1,4 +1,4 @@
-organization := "com.altuera"
+organization := "com.altuera.open_ru"
 name := "gms_antivirus_service"
 version := "0.0.4"
 
@@ -8,6 +8,8 @@ mainClass in Compile := Some("com.altuera.gms_antivirus_service.UploadServlet")
 
 scalacOptions += "-Ypartial-unification" // 2.11.9+
 scalacOptions += "-feature"
+
+scapegoatVersion in ThisBuild := "1.3.8"
 
 libraryDependencies ++= Seq(
 
