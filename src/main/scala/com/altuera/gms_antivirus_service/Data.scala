@@ -2,6 +2,8 @@
 package com.altuera.gms_antivirus_service
 
 import java.io.File
-import java.util
 
-final case class Data(secureKey: String, clientId: String, requestHeaders: util.Map[String, String], file: File)
+import scala.collection.mutable
+
+final case class Data(secureKey: String, clientId: String, requestHeaders: mutable.Map[String, String], file: File)
+

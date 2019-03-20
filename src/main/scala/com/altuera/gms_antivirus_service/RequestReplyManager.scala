@@ -2,7 +2,6 @@
 package com.altuera.gms_antivirus_service
 
 import java.io.{File, IOException}
-import java.util
 import java.util.UUID
 
 import com.softwaremill.sttp.Response
@@ -13,6 +12,8 @@ import org.apache.commons.fileupload.{FileItemStream, FileUploadException}
 import org.apache.commons.io.FileUtils
 import org.slf4j.LoggerFactory
 
+import scala.collection.JavaConverters._
+import scala.collection.mutable
 import scala.util.{Failure, Success, Try}
 
 object RequestReplyManager {
@@ -29,7 +30,8 @@ class RequestReplyManager(request: HttpServletRequest,
 
   def sendCustomNoticeToChat(): Unit = {
     val id = String.valueOf(UUID.randomUUID)
-    val cookieHeaderValue = data.requestHeaders.get("cookie")
+    val cookieHeaderValue = data.requestHeaders
+      .getOrElse("cookie", throw new SendCustomNoticeException("cookie header is empty"))
     val success = RequestReplyManager.genesysClient.sendCustomNotice(
       id,
       data.clientId,
@@ -45,7 +47,8 @@ class RequestReplyManager(request: HttpServletRequest,
   }
 
   def uploadFileToChat(): Response[String] = {
-    val cookieHeaderValue = data.requestHeaders.get("cookie")
+    val cookieHeaderValue = data.requestHeaders
+      .getOrElse("cookie", throw new UploadFileToChatException("cookie header is empty"))
     RequestReplyManager.genesysClient.uploadFileToChat(data.file, data.secureKey, cookieHeaderValue)
   }
 
@@ -83,7 +86,7 @@ class RequestReplyManager(request: HttpServletRequest,
   private def getServletRequestData(): Data = {
     try {
       validateMultipartContent()
-      val requestHeaders: util.Map[String, String] = Utils.getRequestHeaders(request)
+      val requestHeaders: mutable.Map[String, String] = Utils.getRequestHeaders(request).asScala
 
       val upload = new ServletFileUpload()
       val iterator = upload.getItemIterator(request)
@@ -189,11 +192,11 @@ class RequestReplyManager(request: HttpServletRequest,
       }
     }
 
-    def validRequestHeaders(requestHeaders: util.Map[String, String]): Try[util.Map[String, String]] = {
+    def validRequestHeaders(requestHeaders: mutable.Map[String, String]): Try[mutable.Map[String, String]] = {
       if (requestHeaders == null || requestHeaders.isEmpty) {
         Failure(new ValidateServletRequestDataException("requestHeaders is null or empty"))
       }
-      if (requestHeaders.containsKey("cookie")) {
+      if (requestHeaders.contains("cookie")) {
         val cookie = requestHeaders.get("cookie")
         if (cookie == null || cookie.isEmpty) {
           Failure(new ValidateServletRequestDataException("cookie header is null or empty"))
