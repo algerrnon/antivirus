@@ -8,36 +8,28 @@ import spray.json.{JsObject, JsString}
 
 import scala.util.control.NonFatal
 
-final case class MultipartRequestValidationException(private val message: String = "",
-                                                     private val cause: Throwable = None.orNull)
+final case class MultipartRequestValidationException(message: String = "", cause: Throwable = None.orNull)
   extends Exception(message, cause)
 
-final case class GetDataFromServletRequestException(private val message: String = "",
-                                                    private val cause: Throwable = None.orNull)
+final case class GetDataFromServletRequestException(message: String = "", cause: Throwable = None.orNull)
   extends Exception(message, cause)
 
-final case class ValidateServletRequestDataException(private val message: String = "",
-                                                     private val cause: Throwable = None.orNull)
+final case class ValidateServletRequestDataException(message: String = "", cause: Throwable = None.orNull)
   extends Exception(message, cause)
 
-final case class CreateTempDirAndTempFileException(private val message: String = "",
-                                                   private val cause: Throwable = None.orNull)
+final case class CreateTempDirAndTempFileException(message: String = "", cause: Throwable = None.orNull)
   extends Exception(message, cause)
 
-final case class CopyInputStreamToFileException(private val message: String = "",
-                                                private val cause: Throwable = None.orNull)
+final case class CopyInputStreamToFileException(message: String = "", cause: Throwable = None.orNull)
   extends Exception(message, cause)
 
-final case class SendCustomNoticeException(private val message: String = "",
-                                           private val cause: Throwable = None.orNull)
+final case class SendCustomNoticeException(message: String = "", cause: Throwable = None.orNull)
   extends Exception(message, cause)
 
-final case class UploadFileToChatException(private val message: String = "",
-                                           private val cause: Throwable = None.orNull)
+final case class UploadFileToChatException(message: String = "", cause: Throwable = None.orNull)
   extends Exception(message, cause)
 
-final case class CopyGenesysResponseToServletResponseException(private val message: String = "",
-                                                               private val cause: Throwable = None.orNull)
+final case class CopyGenesysResponseToServletResponseException(message: String = "", cause: Throwable = None.orNull)
   extends Exception(message, cause)
 
 @WebServlet(
