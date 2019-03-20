@@ -17,7 +17,7 @@ class GenesysApiClientSttp(url: String) {
 
   def sendCustomNotice(id: String, clientId: String, message: String, secureKey: String, cookieHeaderValue: String): Boolean = {
 
-    var requestBody =
+    val requestBody =
       s"""{
          |  "channel": "/service/chatV2/request-chat-v2",
          |  "data": {

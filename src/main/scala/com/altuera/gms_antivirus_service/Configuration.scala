@@ -7,9 +7,15 @@ object Configuration {
 
   private val config = ConfigFactory.load()
 
-  def uploadDir: String = Some("uploadDir").filter(config.hasPath).map(config.getString).get
+  def uploadDir: String = Some("uploadDir")
+    .filter(config.hasPath).map(config.getString)
+    .getOrElse(throw new IllegalStateException("Required config property \"uploadDir\" missing"))
 
-  def genesysApiBaseUrl: String = Some("genesysApi.baseUrl").filter(config.hasPath).map(config.getString).get
+  def genesysApiBaseUrl: String = Some("genesysApi.baseUrl")
+    .filter(config.hasPath).map(config.getString)
+    .getOrElse(throw new IllegalStateException("Required config property \"genesysApi.baseUrl\" missing"))
 
-  def customNoticeMessage: String = Some("customNotice.message").filter(config.hasPath).map(config.getString).get
+  def customNoticeMessage: String = Some("customNotice.message")
+    .filter(config.hasPath).map(config.getString)
+    .getOrElse(throw new IllegalStateException("Required config property \"customNotice.message\" missing"))
 }

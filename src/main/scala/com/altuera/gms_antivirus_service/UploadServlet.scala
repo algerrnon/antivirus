@@ -49,13 +49,15 @@ final case class CopyGenesysResponseToServletResponseException(private val messa
 class UploadServlet extends HttpServlet {
 
   private val log = LoggerFactory.getLogger(this.getClass)
+  val STATUS_CODE_FAILED = 500
+  val STATUS_CODE_OK = 200
 
   @MultipartConfig(
     fileSizeThreshold = 1024 * 1024 * 10, //10 MB
     maxFileSize = 1024 * 1024 * 50, //50 MB
     maxRequestSize = 1024 * 1024 * 100) //100MB
   override def doPost(servletRequest: HttpServletRequest, servletResponse: HttpServletResponse): Unit = {
-    servletResponse.setStatus(200)
+    servletResponse.setStatus(STATUS_CODE_OK)
     servletResponse.setContentType("application/json")
 
     try {
@@ -75,7 +77,7 @@ class UploadServlet extends HttpServlet {
   }
 
   private def makeErrorResponse(message: String, response: HttpServletResponse) = {
-    response.setStatus(500)
+    response.setStatus(STATUS_CODE_FAILED)
     response.setContentType("application/json")
     response.getWriter.write(JsObject("result" -> JsString("error"), "message" -> JsString(message)).toString())
   }

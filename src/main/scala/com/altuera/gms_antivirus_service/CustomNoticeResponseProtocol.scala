@@ -5,7 +5,7 @@ package com.altuera.gms_antivirus_service
 import spray.json.{DefaultJsonProtocol, JsonFormat}
 
 
-case class CustomNoticeResponse
+final case class CustomNoticeResponse
 (
   channel: String,
   id: String,

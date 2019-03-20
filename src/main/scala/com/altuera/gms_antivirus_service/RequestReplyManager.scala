@@ -71,7 +71,7 @@ class RequestReplyManager(request: HttpServletRequest,
     Utils.deleteFolderRecursively(data.file)
   }
 
-  def validateServletRequestData() = {
+  def validateServletRequestData(): Unit = {
     DataValidator.validateServletRequestData(this.data) match {
       case Success(lines) => log.trace("request is valid")
       case Failure(exception) =>
@@ -90,7 +90,7 @@ class RequestReplyManager(request: HttpServletRequest,
 
       var secureKey: String = ""
       var clientId: String = ""
-      var file: File = null
+      var file: Option[File] = None
       while (iterator.hasNext()) {
         val item = iterator.next()
 
@@ -112,19 +112,19 @@ class RequestReplyManager(request: HttpServletRequest,
             case unexpectedField => log.trace("Unexpected field name: " + unexpectedField)
           }
         }
-        else if (file == null) {
-          file = readFileDataFromRequestAndWriteToTempFile(item)
+        else if (!file.isDefined) {
+          file = Some(readFileDataFromRequestAndWriteToTempFile(item))
         }
       }
-      new Data(secureKey, clientId, requestHeaders, file)
+      new Data(secureKey, clientId, requestHeaders, file.getOrElse(throw new GetDataFromServletRequestException("Failed to upload file")))
     }
     catch {
       case ex: IOException =>
-        log.error("No file uploaded", ex)
-        throw new GetDataFromServletRequestException("IOException, No file uploaded")
+        log.error("Failed to upload file", ex)
+        throw new GetDataFromServletRequestException("IOException, Failed to upload file")
       case ex: FileUploadException =>
-        log.error("No file uploaded", ex)
-        throw new GetDataFromServletRequestException("FileUploadException, No file uploaded")
+        log.error("Failed to upload file", ex)
+        throw new GetDataFromServletRequestException("FileUploadException, Failed to upload file")
     }
   }
 
@@ -154,13 +154,13 @@ class RequestReplyManager(request: HttpServletRequest,
     log.trace("Got an uploaded file: " + fieldName + ", name = " + fileName)
     log.trace("Try to write stream to file : \n->" + stream.available() + " octets \n")
     // creates the temp directory and temp file
-    var tempFile: File = Utils.createNewTempDirAndTempFileInDir(RequestReplyManager.baseDirectoryForTemporaryDirs, fileName)
+    val tempFile: File = Utils.createNewTempDirAndTempFileInDir(RequestReplyManager.baseDirectoryForTemporaryDirs, fileName)
     FileUtils.copyInputStreamToFile(stream, tempFile)
     stream.close()
     tempFile
   }
 
-  case class Data(secureKey: String, clientId: String, requestHeaders: util.Map[String, String], file: File)
+  final case class Data(secureKey: String, clientId: String, requestHeaders: util.Map[String, String], file: File)
 
   object DataValidator {
 
