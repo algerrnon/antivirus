@@ -7,15 +7,22 @@ object Configuration {
 
   private val config = ConfigFactory.load()
 
-  def uploadDir: String = Some("uploadDir")
-    .filter(config.hasPath).map(config.getString)
-    .getOrElse(throw new IllegalStateException("Required config property \"uploadDir\" missing"))
+  def uploadDir: String = getStringProperty("uploadDir")
 
-  def genesysApiBaseUrl: String = Some("genesysApi.baseUrl")
-    .filter(config.hasPath).map(config.getString)
-    .getOrElse(throw new IllegalStateException("Required config property \"genesysApi.baseUrl\" missing"))
+  def genesysApiBaseUrl: String = getStringProperty("genesysApi.baseUrl")
 
-  def customNoticeMessage: String = Some("customNotice.message")
-    .filter(config.hasPath).map(config.getString)
-    .getOrElse(throw new IllegalStateException("Required config property \"customNotice.message\" missing"))
+  def customNoticeMessage: String = getStringProperty("customNotice.message")
+
+  //Threat Prevention API
+  def teApiServerAddress: String = getStringProperty("teApi.serverAddress")
+
+  def teApiVersion: String = getStringProperty("teApi.apiVersion")
+
+  def teApiKey: String = getStringProperty("teApi.apiKey")
+
+  private def getStringProperty(path: String): String = {
+    Some(path)
+      .filter(config.hasPath).map(config.getString)
+      .getOrElse(throw new IllegalStateException(s"Required config property [$path] missing"))
+  }
 }
