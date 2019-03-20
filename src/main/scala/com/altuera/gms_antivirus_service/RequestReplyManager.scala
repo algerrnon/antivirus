@@ -70,7 +70,7 @@ class RequestReplyManager(request: HttpServletRequest,
     Utils.deleteFolderRecursively(data.file)
   }
 
-  private def validateServletRequestData() = {
+  def validateServletRequestData() = {
     DataValidator.validateServletRequestData(this.data) match {
       case Success(lines) => log.trace("request is valid")
       case Failure(exception) =>
