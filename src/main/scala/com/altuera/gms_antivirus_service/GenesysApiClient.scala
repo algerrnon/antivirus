@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory
 import spray.json.DefaultJsonProtocol._
 import spray.json._
 
-class GenesysApiClientSttp(url: String) {
+class GenesysApiClient(url: String) {
   private val baseUri = uri"$url"
   private val sendCustomNoticeUri = baseUri.path("genesys/cometd")
   private val uploadFileToChatUri = baseUri.path("genesys/2/chat-ntf")

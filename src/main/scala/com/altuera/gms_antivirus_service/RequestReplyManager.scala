@@ -18,7 +18,7 @@ import scala.util.{Failure, Success, Try}
 
 object RequestReplyManager {
   val baseDirectoryForTemporaryDirs = Utils.createDirIfNotExist(Configuration.uploadDir)
-  val genesysClient = new GenesysApiClientSttp(Configuration.genesysApiBaseUrl)
+  val genesysClient = new GenesysApiClient(Configuration.genesysApiBaseUrl)
 
 }
 
