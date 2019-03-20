@@ -112,7 +112,7 @@ class RequestReplyManager(request: HttpServletRequest,
             case unexpectedField => log.trace("Unexpected field name: " + unexpectedField)
           }
         }
-        else if (!file.isDefined) {
+        else if (file.isEmpty) {
           file = Some(readFileDataFromRequestAndWriteToTempFile(item))
         }
       }
