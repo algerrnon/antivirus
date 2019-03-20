@@ -19,10 +19,8 @@ libraryDependencies ++= Seq(
   "com.typesafe" % "config" % "1.3.3",
   "io.spray" %% "spray-json" % "1.3.5",
   "commons-fileupload" % "commons-fileupload" % "1.3.3",
-  "commons-io" % "commons-io" % "2.6",
-  "com.softwaremill.sttp" %% "core" % "1.5.11",
-  //"com.softwaremill.sttp" %% "spray-json" % "1.5.11"
-
+  "commons-io" % "commons-io" % "2.2",
+  "com.softwaremill.sttp" %% "core" % "1.5.11"
 )
 
 //если хотите версию томката которая не совпадает с версией по умолчанию
