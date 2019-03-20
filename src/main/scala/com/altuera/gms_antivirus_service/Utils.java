@@ -1,3 +1,4 @@
+// © LLC "Altuera", 2019
 package com.altuera.gms_antivirus_service;
 
 import org.slf4j.Logger;
