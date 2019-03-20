@@ -6,6 +6,8 @@ import java.lang.invoke.MethodHandles
 
 import com.softwaremill.sttp._
 import org.slf4j.LoggerFactory
+import spray.json.DefaultJsonProtocol._
+import spray.json._
 
 class GenesysApiClientSttp(url: String) {
   private val baseUri = uri"$url"
@@ -42,7 +44,8 @@ class GenesysApiClientSttp(url: String) {
       }
       case Right(obj) => {
         log.trace(obj)
-        true
+        obj.parseJson.convertTo[Seq[CustomNoticeResponse]].head.successful
+        //example :  [{"channel":"/service/chatV2/request-chat-v2","id":"123abc","error":"402::Unknown client","successful":false}]
       }
     }
   }
@@ -60,4 +63,3 @@ class GenesysApiClientSttp(url: String) {
     result
   }
 }
-
