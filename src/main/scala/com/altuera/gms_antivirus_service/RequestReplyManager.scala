@@ -160,8 +160,6 @@ class RequestReplyManager(request: HttpServletRequest,
     tempFile
   }
 
-  final case class Data(secureKey: String, clientId: String, requestHeaders: util.Map[String, String], file: File)
-
   object DataValidator {
 
     def validFile(file: File): Try[File] = {

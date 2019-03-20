@@ -6,6 +6,8 @@ import javax.servlet.http.{HttpServlet, HttpServletRequest, HttpServletResponse}
 import org.slf4j.LoggerFactory
 import spray.json.{JsObject, JsString}
 
+import scala.util.control.NonFatal
+
 final case class MultipartRequestValidationException(private val message: String = "",
                                                      private val cause: Throwable = None.orNull)
   extends Exception(message, cause)
@@ -69,10 +71,9 @@ class UploadServlet extends HttpServlet {
       manager.deleteFolderRecursively()
     }
     catch {
-      case ex: Throwable => {
+      case NonFatal(ex) =>
         log.error("error", ex)
         makeErrorResponse(ex.getLocalizedMessage, servletResponse)
-      }
     }
   }
 

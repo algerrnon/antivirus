@@ -44,8 +44,12 @@ class GenesysApiClientSttp(url: String) {
       }
       case Right(obj) => {
         log.trace(obj)
-        obj.parseJson.convertTo[Seq[CustomNoticeResponse]].headOption.getOrElse(return false).successful
-        //example :  [{"channel":"/service/chatV2/request-chat-v2","id":"123abc","error":"402::Unknown client","successful":false}]
+        //example response body:  [{"channel":"/service/chatV2/request-chat-v2","id":"123abc","error":"402::Unknown client","successful":false}]
+        val headOption = obj.parseJson.convertTo[Seq[CustomNoticeResponse]].headOption
+        headOption match {
+          case Some(value) => value.successful
+          case None => false
+        }
       }
     }
   }
