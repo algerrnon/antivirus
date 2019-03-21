@@ -35,6 +35,7 @@ https://<serverAddress>/tecloud/api/<apiVersion>/file/<operation>
 |Настройка|Значение|Пример|
 |---|---|---|
 |teApi.serverAddress|Адрес сервиса (зависит развёрнутого окружения)||
+|teApi.serverPort|Порт сервиса (зависит развёрнутого окружения) используется только для Threat Prevention API on a local gateway||
 |teApi.apiVersion|Версия Threat Prevention API||
 |teApi.apiKey|Валидный __API Key__, который передаётся в качестве значения HTTP-заголовка Authorization при запросах к Threat Prevention API|Authorization: YWJjZDEyMzQ|
 
