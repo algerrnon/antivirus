@@ -1,11 +1,12 @@
 // © LLC "Altuera", 2019
-package com.altuera.gms_antivirus_service
+package com.altuera.gms_antivirus_service.tpapi
 
 import java.io.File
 import java.lang.invoke.MethodHandles
 
-import com.altuera.gms_antivirus_service.Models.QuotaResponse
-import com.altuera.gms_antivirus_service.Models.QuotaResponseItemProtocol._
+import com.altuera.gms_antivirus_service.tpapi.Models.QuotaResponse
+import com.altuera.gms_antivirus_service.tpapi.Models.QuotaResponseItemProtocol._
+import com.altuera.gms_antivirus_service.{Configuration, Utils}
 import com.softwaremill.sttp.{multipart, _}
 import org.slf4j.LoggerFactory
 import spray.json.{JsObject, _}

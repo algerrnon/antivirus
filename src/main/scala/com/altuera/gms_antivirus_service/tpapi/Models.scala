@@ -1,5 +1,5 @@
 // © LLC "Altuera", 2019
-package com.altuera.gms_antivirus_service
+package com.altuera.gms_antivirus_service.tpapi
 
 object Models {
 
