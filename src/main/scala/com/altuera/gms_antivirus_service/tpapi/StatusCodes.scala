@@ -7,44 +7,44 @@ package com.altuera.gms_antivirus_service.tpapi
   *
   */
 
-object StatusCodes extends Enumeration {
+object StatusCodes {
   /**
     * Request served successfully.
     */
-  val OK = Value(200)
+  val OK = 200
 
   /**
     * Service is not available anymore.
     */
-  val MOVED_PERMANENTLY = Value(301)
+  val MOVED_PERMANENTLY = 301
 
   /**
     * Incorrect request format.
     */
-  val BAD_REQUEST = Value(400)
+  val BAD_REQUEST = 400
 
   /**
     * Authentication failed.
     */
-  val UNAUTHORIZED = Value(401)
+  val UNAUTHORIZED = 401
 
   /**
     * Unauthorized access to the service.
     */
-  val FORBIDDEN = Value(403)
+  val FORBIDDEN = 403
 
   /**
     * Service does not exist.
     */
-  val NOT_FOUND = Value(404)
+  val NOT_FOUND = 404
 
   /**
     * There was an error in the service.
     */
-  val INTERNAL_SERVER_ERROR = Value(500)
+  val INTERNAL_SERVER_ERROR = 500
 
   /**
     * Currently this request cannot be served.
     */
-  val SERVICE_UNAVAILABLE = Value(503)
+  val SERVICE_UNAVAILABLE = 503
 }
