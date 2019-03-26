@@ -20,6 +20,7 @@ object Configuration {
 
   def teApiKey: String = getStringProperty("teApi.apiKey")
 
+
   private def getStringProperty(path: String): String = {
     Some(path)
       .filter(config.hasPath).map(config.getString)
