@@ -32,6 +32,10 @@ class Antivirus {
   private val QUOTA_PATH = uri"${API_PATH}quota"
   private val API_KEY = Configuration.avApiKey
 
+  private val PAUSE_BETWEEN_ATTEMPTS_MILLISECONDS = Configuration.avRetryPauseBetweenAttemptsMilliseconds
+  private val MAX_NUMBER_OF_TIMES = Configuration.avRetryMaxNumberOfTimes
+  private val MAXIMUM_WAIT_TIME_SECONDS = Configuration.avRetryMaximumWaitTimeSeconds
+
   private val log = LoggerFactory.getLogger(MethodHandles.lookup.lookupClass)
   private implicit val backend = HttpURLConnectionBackend()
 
@@ -150,14 +154,17 @@ class Antivirus {
     implicit val isDefined = retry.Success[Option[(Boolean, ExtractionResultData)]](x => x != null && x.isDefined && x.get._1)
 
     def doRetry() = {
-      retry.Pause(delay = Duration(200, TimeUnit.MILLISECONDS), max = 10) //количество попыток будет на единицу больше
+      retry.Pause(
+        delay = Duration(PAUSE_BETWEEN_ATTEMPTS_MILLISECONDS, TimeUnit.MILLISECONDS),
+        max = MAX_NUMBER_OF_TIMES) //количество попыток (на единицу больше чем max)
+        
         .apply(() => Future {
         log.trace("retry")
         threadExtractionQuery(file, convertToPdf)
       })
     }
 
-    Try(Await.result(doRetry(), Duration(60, TimeUnit.SECONDS))) match {
+    Try(Await.result(doRetry(), Duration(MAXIMUM_WAIT_TIME_SECONDS, TimeUnit.SECONDS))) match {
       case scala.util.Success(fx) => if (fx.isDefined) {
         Some(fx.get._2)
       } else {
@@ -223,14 +230,17 @@ class Antivirus {
     implicit val isDefined = retry.Success[Option[(Boolean, EmulationResultData)]](x => x != null && x.isDefined && x.get._1)
 
     def doRetry() = {
-      retry.Pause(delay = Duration(200, TimeUnit.MILLISECONDS), max = 10) //11 попыток
+      retry.Pause(
+        delay = Duration(PAUSE_BETWEEN_ATTEMPTS_MILLISECONDS, TimeUnit.MILLISECONDS),
+        max = MAX_NUMBER_OF_TIMES)
+
         .apply(() => Future {
         log.trace("retry")
         threadEmulationQuery(file)
       })
     }
 
-    Try(Await.result(doRetry(), Duration(60, TimeUnit.SECONDS))) match {
+    Try(Await.result(doRetry(), Duration(MAXIMUM_WAIT_TIME_SECONDS, TimeUnit.SECONDS))) match {
       case scala.util.Success(fx) => if (fx.isDefined) {
         Some(fx.get._2)
       } else {
