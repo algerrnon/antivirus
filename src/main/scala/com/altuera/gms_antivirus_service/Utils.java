@@ -111,4 +111,13 @@ public class Utils {
       directory.deleteOnExit();
     }
   }
+
+  public static String extractFileExt(String fileName) {
+    int lastIndex = fileName.lastIndexOf(".");
+    if (lastIndex == -1) {
+      return "";
+    } else {
+      return fileName.substring(lastIndex + 1);
+    }
+  }
 }

@@ -5,6 +5,7 @@ import java.io.File
 import java.lang.invoke.MethodHandles
 import java.nio.file.Files
 import java.security.{DigestInputStream, MessageDigest}
+import java.util.concurrent.TimeUnit
 
 import com.altuera.gms_antivirus_service.tpapi.Models.QuotaResponse
 import com.altuera.gms_antivirus_service.tpapi.Models.QuotaResponseItemProtocol._
@@ -13,7 +14,13 @@ import com.softwaremill.sttp.{multipart, _}
 import org.slf4j.LoggerFactory
 import spray.json.{JsObject, _}
 
-class TPApiClient {
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration.Duration
+import scala.concurrent.{Await, Future}
+import scala.util.Try
+
+
+class TeApiClient {
 
   private val baseDirectoryForTemporaryDirs = Utils.createDirIfNotExist(Configuration.uploadDir)
   private val DOMAIN = Configuration.teApiServerAddress
@@ -34,9 +41,9 @@ class TPApiClient {
     * @param file
     * @return
     */
-  def upload(file: File, convertToPdf: Boolean): Boolean = {
+  def upload(file: File, convertToPdf: Boolean = true): Boolean = {
     val fileName = file.getName //"example: MyFile.docx"
-    val fileType = extractExt(fileName) //example: "docx"
+    val fileType = Utils.extractFileExt(fileName) //example: "docx"
     val md5 = getMd5(file)
 
     val reportType = "xml"
@@ -97,13 +104,9 @@ class TPApiClient {
     md.digest.map(b => String.format("%02x", Byte.box(b))).mkString
   }
 
-  private def extractExt(fileName: String): String = {
-    val lastIndex = fileName.lastIndexOf(".")
-    if (lastIndex == -1) "" else fileName.substring(lastIndex + 1)
-  }
-
   /**
     * //HTTP GET: https://<service_address>/tecloud/api/<version>/file/quota
+    *
     * @return
     */
   def quota(): Option[QuotaResponse] = {
@@ -143,6 +146,26 @@ class TPApiClient {
     Some(file)
   }
 
+  def threadExtractionQueryRetry(file: File, convertToPdf: Boolean): Option[ExtractionResultData] = {
+    implicit val isDefined = retry.Success[Option[(Boolean, ExtractionResultData)]](x => x != null && x.isDefined && x.get._1)
+
+    def doRetry() = {
+      retry.Pause(delay = Duration(200, TimeUnit.MILLISECONDS), max = 10) //6 попыток
+        .apply(() => Future {
+        log.trace("retry")
+        threadExtractionQuery(file, convertToPdf)
+      })
+    }
+
+    Try(Await.result(doRetry(), Duration(60, TimeUnit.SECONDS))) match {
+      case scala.util.Success(fx) => if (fx.isDefined) {
+        Some(fx.get._2)
+      } else {
+        None
+      }
+      case _ => None
+    }
+  }
 
   /**
     *
@@ -154,14 +177,14 @@ class TPApiClient {
   def threadExtractionQuery(file: File, convertToPdf: Boolean): Option[(Boolean, ExtractionResultData)] = {
     val checksum = getMd5(file)
     val fileName = file.getName
-    val fileType = extractExt(fileName)
+    val fileType = Utils.extractFileExt(fileName)
     val extractedParts = Vector()
     val jsonPart = JsObject("request" ->
       JsObject(
         "md5" -> JsString(checksum),
         "file_name" -> JsString(fileName),
         "file_type" -> JsString(fileType),
-        "features" -> JsArray(JsString(ApiFeatures.THREAT_EXTRACTION)
+        "features" -> JsArray(JsString(ApiFeatures.THREAT_EXTRACTION), JsString(ApiFeatures.ANTI_VIRUS)
         ),
         "extraction" ->
           JsObject("method" -> JsString(if (convertToPdf) "pdf" else "clean"),
@@ -196,6 +219,27 @@ class TPApiClient {
     }
   }
 
+  def threadEmulationQueryRetry(file: File): Option[EmulationResultData] = {
+    implicit val isDefined = retry.Success[Option[(Boolean, EmulationResultData)]](x => x != null && x.isDefined && x.get._1)
+
+    def doRetry() = {
+      retry.Pause(delay = Duration(200, TimeUnit.MILLISECONDS), max = 10) //11 попыток
+        .apply(() => Future {
+        log.trace("retry")
+        threadEmulationQuery(file)
+      })
+    }
+
+    Try(Await.result(doRetry(), Duration(60, TimeUnit.SECONDS))) match {
+      case scala.util.Success(fx) => if (fx.isDefined) {
+        Some(fx.get._2)
+      } else {
+        None
+      }
+      case _ => None
+    }
+  }
+
   /**
     *
     *
@@ -205,7 +249,7 @@ class TPApiClient {
   def threadEmulationQuery(file: File): Option[(Boolean, EmulationResultData)] = {
     val checksum = getMd5(file)
     val fileName = file.getName
-    val fileType = extractExt(fileName)
+    val fileType = Utils.extractFileExt(fileName)
     val extractedParts = Vector()
     val jsonPart = JsObject("request" ->
       JsObject(
@@ -243,8 +287,6 @@ class TPApiClient {
         }
       }
     }
-
   }
-
 }
 

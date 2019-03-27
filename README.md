@@ -432,3 +432,39 @@ sbt package
   }
 }
 ```
+## Пример ответа в случае обнаружения вируса
+```
+    "av": {
+      "malware_info": {
+        "signature_name": "Trojan.Win32.Generic.TC.iciffcdigcf",
+        "malware_family": 308791,
+        "malware_type": 114,
+        "severity": 4,
+        "confidence": 5
+      },
+      "status": {
+        "code": 1001,
+        "label": "FOUND",
+        "message": "The request has been fully answered."
+      }
+    }
+```
+
+## Пример ответа, где вирус не обнаружен
+
+```
+    "av": {
+      "malware_info": {
+        "signature_name": "",
+        "malware_family": 0,
+        "malware_type": 0,
+        "severity": 0,
+        "confidence": 0
+      },
+      "status": {
+        "code": 1001,
+        "label": "FOUND",
+        "message": "The request has been fully answered."
+      }
+    }
+```

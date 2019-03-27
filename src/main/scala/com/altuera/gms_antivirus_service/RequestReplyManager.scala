@@ -4,6 +4,7 @@ package com.altuera.gms_antivirus_service
 import java.io.{File, IOException}
 import java.util.UUID
 
+import com.altuera.gms_antivirus_service.tpapi.TeApiClient
 import com.softwaremill.sttp.Response
 import javax.servlet.http.{HttpServletRequest, HttpServletResponse}
 import org.apache.commons.fileupload.servlet.ServletFileUpload
@@ -19,6 +20,7 @@ import scala.util.{Failure, Success, Try}
 object RequestReplyManager {
   val baseDirectoryForTemporaryDirs = Utils.createDirIfNotExist(Configuration.uploadDir)
   val genesysClient = new GenesysApiClient(Configuration.genesysApiBaseUrl)
+  val teClient = new TeApiClient()
 
 }
 
@@ -28,14 +30,14 @@ class RequestReplyManager(request: HttpServletRequest,
   private val log = LoggerFactory.getLogger(this.getClass)
   private val data: Data = getServletRequestData()
 
-  def sendCustomNoticeToChat(): Unit = {
+  def sendCustomNoticeToChat(message: String): Unit = {
     val id = String.valueOf(UUID.randomUUID)
     val cookieHeaderValue = data.requestHeaders
       .getOrElse("cookie", throw new SendCustomNoticeException("cookie header is empty"))
     val success = RequestReplyManager.genesysClient.sendCustomNotice(
       id,
       data.clientId,
-      Configuration.customNoticeMessage,
+      message,
       data.secureKey,
       cookieHeaderValue)
 
@@ -46,10 +48,10 @@ class RequestReplyManager(request: HttpServletRequest,
     }
   }
 
-  def uploadFileToChat(): Response[String] = {
+  def uploadFileToChat(file: File): Response[String] = {
     val cookieHeaderValue = data.requestHeaders
       .getOrElse("cookie", throw new UploadFileToChatException("cookie header is empty"))
-    RequestReplyManager.genesysClient.uploadFileToChat(data.file, data.secureKey, cookieHeaderValue)
+    RequestReplyManager.genesysClient.uploadFileToChat(file, data.secureKey, cookieHeaderValue)
   }
 
   def copyGenesysResponseToServletResponse(genesysFileUploadResponse: Response[String]): Unit = {
@@ -219,5 +221,8 @@ class RequestReplyManager(request: HttpServletRequest,
     }
   }
 
+  def getOriginalFile(): File = {
+    data.file
+  }
 }
 
