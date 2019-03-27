@@ -23,7 +23,17 @@ http://127.0.0.1:8080/upload
 |Настройка|Значение|Пример|
 |---|---|---|
 |genesysApi.baseUrl|Базовый URL для взаимодействия с Chat API Version 2 with CometD|"http://gen01:8090/"|
-|customNotice.message|Сообщение отправляемое в чат через Chat API Version 2 with CometD. Сообщение отправляется после загрузки файла во временный каталог, но до проверки файла антивирусной системой и до отправки проверенного файла в чат конечному получателю|"Please wait, while file is loading"|
+
+#### Настройки сообщений отправляемых пользователю
+|Настройка|Значение|Пример|
+|---|---|---|
+|customNotice.pleaseWait|Сообщение отправляемое в чат через Chat API Version 2 with CometD. Сообщение отправляется после загрузки файла во временный каталог, но до проверки файла антивирусной системой и до отправки проверенного файла в чат конечному получателю|"Please wait, while file is loading"|
+|customNotice.isSafeFile|Вам будет отправлен безопасный файл||
+|customNotice.isSafeFileAndLinkToOriginal|Вам будет отправлен безопасный файл. Также в сообщении будет ссылка, при помощи которой вы можете запросить оригинальный файл||
+|customNotice.isInfectedFile|Этот файл опасен||
+|customNotice.isSuspiciousFile|Этот файл может быть небезопасен||
+|customNotice.isCorruptedFile|Это файл поврежден, зашифрован или содержит ошибки||
+|customNotice.fileNotFound|Файл отсутствует и не может быть получен||
 
 #### Настройки Threat Prevention API
 Запросы к этому API выполняются с использованием такого шаблона
@@ -34,10 +44,17 @@ https://<serverAddress>/tecloud/api/<apiVersion>/file/<operation>
 
 |Настройка|Значение|Пример|
 |---|---|---|
-|teApi.serverAddress|Адрес сервиса (зависит развёрнутого окружения)||
-|teApi.serverPort|Порт сервиса (зависит развёрнутого окружения) используется только для Threat Prevention API on a local gateway||
-|teApi.apiVersion|Версия Threat Prevention API||
-|teApi.apiKey|Валидный __API Key__, который передаётся в качестве значения HTTP-заголовка Authorization при запросах к Threat Prevention API|Authorization: YWJjZDEyMzQ|
+|avApi.serverAddress|Адрес сервиса (зависит развёрнутого окружения)||
+|avApi.serverPort|Порт сервиса (зависит развёрнутого окружения) используется только для Threat Prevention API on a local gateway||
+|avApi.apiVersion|Версия Threat Prevention API||
+|avApi.apiKey|Валидный __API Key__, который передаётся в качестве значения HTTP-заголовка Authorization при запросах к Threat Prevention API|Authorization: YWJjZDEyMzQ|
+|avApi.retry.maximumWaitTimeSeconds|Максимальное время ожидания результата от метода, который выполняет периодические попытки|
+|avApi.retry.pauseBetweenAttemptsMilliseconds|Паузы между попытками||
+|avApi.retry.maxNumberOfTimes|Число попыток после достижения которого попытки будут прекращены (если число = 3, значит будет выполнено 4 попытки)||
+|avApi.proxyHost|Адрес прокси, которое может использоваться для доступа к серверу антивирусной системы||
+|avApi.proxyPort|Порт прокси, которое может использоваться для доступа к серверу антивирусной системы||
+|avApi.supportedFileTypes|Поддерживаемые антивирусной системой типы файлов, с разделением на предопределённые группы: docs,  images, others||
+|avApi.vailableOsImages|Список образов ОС, которые используются антивирусной системой для проверки безопасности файлов в Thread Emulation. При запросе проверки безопасности файла в ответе можно получить общую информацию, а также информацию для каждого из образов ОС||
 
 
 ### Сценарий обработки запроса на загрузку файла
