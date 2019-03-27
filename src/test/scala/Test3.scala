@@ -1,11 +1,11 @@
 import java.io.File
 
-import com.altuera.gms_antivirus_service.tpapi.{ExtractResultsStatuses, ExtractionResultData, TeApiClient}
+import com.altuera.gms_antivirus_service.tpapi.{Antivirus, ExtractResultsStatuses, ExtractionResultData}
 
 object Test3 {
 
   def main(args: Array[String]): Unit = {
-    val client = new TeApiClient()
+    val client = new Antivirus()
     val file: File = new File("/home/algernon/av/112313.png")
     val convertToPdf = false
 

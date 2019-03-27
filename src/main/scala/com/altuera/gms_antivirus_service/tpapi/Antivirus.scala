@@ -20,7 +20,7 @@ import scala.concurrent.{Await, Future}
 import scala.util.Try
 
 
-class TeApiClient {
+class Antivirus {
 
   private val baseDirectoryForTemporaryDirs = Utils.createDirIfNotExist(Configuration.uploadDir)
   private val DOMAIN = Configuration.teApiServerAddress

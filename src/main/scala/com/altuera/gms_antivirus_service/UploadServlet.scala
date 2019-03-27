@@ -56,7 +56,7 @@ class UploadServlet extends HttpServlet {
   override def doPost(servletRequest: HttpServletRequest, servletResponse: HttpServletResponse): Unit = {
     servletResponse.setStatus(STATUS_CODE_OK)
     servletResponse.setContentType("application/json")
-    val teClient = new TeApiClient()
+    val teClient = new Antivirus()
 
     try {
       val manager = new RequestReplyManager(servletRequest, servletResponse)
