@@ -23,14 +23,14 @@ import scala.util.Try
 class Antivirus {
 
   private val baseDirectoryForTemporaryDirs = Utils.createDirIfNotExist(Configuration.uploadDir)
-  private val DOMAIN = Configuration.teApiServerAddress
-  private val API_PATH = s"/tecloud/api/${Configuration.teApiVersion}/file/"
+  private val DOMAIN = Configuration.avApiServerAddress
+  private val API_PATH = s"/tecloud/api/${Configuration.avApiVersion}/file/"
   private val TE_API_URL = "https://" + DOMAIN + API_PATH
   private val UPLOAD_URL = uri"${TE_API_URL}upload"
   private val QUERY_URL = uri"${TE_API_URL}query"
   private val DOWNLOAD_PATH = uri"${TE_API_URL}download"
   private val QUOTA_PATH = uri"${API_PATH}quota"
-  private val API_KEY = Configuration.teApiKey
+  private val API_KEY = Configuration.avApiKey
 
   private val log = LoggerFactory.getLogger(MethodHandles.lookup.lookupClass)
   private implicit val backend = HttpURLConnectionBackend()
@@ -150,7 +150,7 @@ class Antivirus {
     implicit val isDefined = retry.Success[Option[(Boolean, ExtractionResultData)]](x => x != null && x.isDefined && x.get._1)
 
     def doRetry() = {
-      retry.Pause(delay = Duration(200, TimeUnit.MILLISECONDS), max = 10) //6 попыток
+      retry.Pause(delay = Duration(200, TimeUnit.MILLISECONDS), max = 10) //количество попыток будет на единицу больше
         .apply(() => Future {
         log.trace("retry")
         threadExtractionQuery(file, convertToPdf)

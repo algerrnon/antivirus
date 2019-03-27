@@ -125,13 +125,13 @@ class UploadServlet extends HttpServlet {
 
   def detectFileType(file: File): String = {
     val filelExt = Utils.extractFileExt(file.getName)
-    if (Configuration.teTypesImages.contains(filelExt)) {
+    if (Configuration.avTypesImages.contains(filelExt)) {
       FileTypes.IMAGE
     }
-    else if (Configuration.teTypesDocs.contains(filelExt)) {
+    else if (Configuration.avTypesDocs.contains(filelExt)) {
       FileTypes.DOC
     }
-    else if (Configuration.teTypesOthers.contains(filelExt)) {
+    else if (Configuration.avTypesOthers.contains(filelExt)) {
       FileTypes.OTHER
     }
     else {

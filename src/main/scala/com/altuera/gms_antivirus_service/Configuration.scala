@@ -13,6 +13,7 @@ object Configuration {
 
   def genesysApiBaseUrl: String = getStringProperty("genesysApi.baseUrl")
 
+  //Messages
   def messagePleaseWait: String = getStringProperty("customNotices.pleaseWait")
 
   def messageIsSafeFile: String = getStringProperty("customNotices.isSafeFile")
@@ -27,24 +28,34 @@ object Configuration {
 
   def messageFileNotFound: String = getStringProperty("customNotices.fileNotFound")
 
-  //Threat Prevention API
-  def teApiServerAddress: String = getStringProperty("teApi.serverAddress")
+  //File types
+  private val avFileTypes = config.getConfig("avApi.supportedFileTypes")
 
-  def teApiVersion: String = getStringProperty("teApi.apiVersion")
+  def avTypesDocs: List[String] = avFileTypes.getStringList("docs").asScala.toList
 
-  def teApiKey: String = getStringProperty("teApi.apiKey")
+  def avTypesImages: List[String] = avFileTypes.getStringList("images").asScala.toList
 
-  def teProxyHost: String = getStringProperty("proxy.com")
+  def avTypesOthers: List[String] = avFileTypes.getStringList("others").asScala.toList
 
-  def teProxyPort: Int = getIntProperty("proxy.com")
 
-  private val teFileTypes = config.getConfig("teApi.supportedFileTypes")
+  //Threat Prevention API (Antivirus = av)
+  def avApiServerAddress: String = getStringProperty("avApi.serverAddress")
 
-  def teTypesDocs: List[String] = teFileTypes.getStringList("docs").asScala.toList
+  def avApiVersion: String = getStringProperty("avApi.apiVersion")
 
-  def teTypesImages: List[String] = teFileTypes.getStringList("images").asScala.toList
+  def avApiKey: String = getStringProperty("avApi.apiKey")
 
-  def teTypesOthers: List[String] = teFileTypes.getStringList("others").asScala.toList
+  //Antivirus http-client, retry parameters
+  def avRetryMaximumWaitTimeSeconds: Int = getIntProperty("avApi.retry.maximumWaitTimeSeconds")
+
+  def avRetryPauseBetweenAttemptsMilliseconds: Int = getIntProperty("avApi.retry.pauseBetweenAttemptsMilliseconds")
+
+  def avRetryMaxNumberOfTimes: Int = getIntProperty("avApi.retry.maxNumberOfTimes")
+
+  //Antiviry proxy
+  def avProxyHost: String = getStringProperty("avApi.proxyHost")
+
+  def avProxyPort: Int = getIntProperty("avApi.proxyPort")
 
   private def getStringProperty(path: String): String = {
     Some(path)
