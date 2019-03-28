@@ -143,6 +143,7 @@ class Antivirus {
     val response = sttp
       .get(DOWNLOAD_PATH.params("id" -> id))
       .header("Authorization", API_KEY)
+      .header("Cache-Control", "no-cache")
       .response(asFile(file = file, overwrite = true))
       .send()
     Some(file)
