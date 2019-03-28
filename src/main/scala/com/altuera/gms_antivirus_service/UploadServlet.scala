@@ -85,18 +85,7 @@ class UploadServlet extends HttpServlet {
           manager.sendCustomNoticeToChat(Configuration.messagePleaseWait)
 
           val emulation: Option[EmulationResultData] = antivirus.threadEmulationQueryRetry(originalFile)
-          val verdict = emulation.map(_.combined_verdict).getOrElse("")
-          if (verdict.equalsIgnoreCase(VerdictValues.BENIGN)) {
-            //Если вердикт отрицательный (не вирус) – направляем в GMS оригинальный документ.
-            manager.sendCustomNoticeToChat(Configuration.messageIsSafeFileAndLinkToOriginal)
-            val genesysUploadResponse = manager.uploadFileToChat(originalFile)
-            manager.copyGenesysResponseToServletResponse(genesysUploadResponse)
-          } else if (verdict.equalsIgnoreCase(VerdictValues.MALICIOUS)) {
-            //Если вердикт положительный (вирус) – направляем кастомные сообщения получателю и отправителю.
-            manager.sendCustomNoticeToChat(Configuration.messageIsInfectedFile)
-          } else {
-            //что-то пошло не так, например сервис возвращает VerdictValues.UNKNOWN
-          }
+          processResultEmulation(manager, originalFile, emulation, Configuration.messageIsSafeFileAndLinkToOriginal)
 
         } else { //Полученный очищенный файл направляем получателю через GMS вместе с кастомным сообщением, что доставлена безопасная копия.
           manager.sendCustomNoticeToChat(Configuration.messageIsSafeFile)
@@ -106,18 +95,7 @@ class UploadServlet extends HttpServlet {
       }
       else {
         val emulation: Option[EmulationResultData] = antivirus.threadEmulationQueryRetry(originalFile)
-        val verdict = emulation.map(_.combined_verdict).getOrElse("")
-        if (verdict.equalsIgnoreCase(VerdictValues.BENIGN)) {
-          //Если вердикт отрицательный (не вирус) – направляем в GMS оригинальный файл
-          manager.sendCustomNoticeToChat(Configuration.messageIsSafeFile)
-          val genesysUploadResponse = manager.uploadFileToChat(originalFile)
-          manager.copyGenesysResponseToServletResponse(genesysUploadResponse)
-        } else if (verdict.equalsIgnoreCase(VerdictValues.MALICIOUS)) {
-          //Если вердикт положительный (вирус) – направляем кастомные сообщения получателю и отправителю.
-          manager.sendCustomNoticeToChat(Configuration.messageIsInfectedFile)
-        } else {
-          //что-то пошло не так, например сервис возвращает VerdictValues.UNKNOWN
-        }
+        processResultEmulation(manager, originalFile, emulation, Configuration.messageIsSafeFile)
       }
       //todo Оригиналы храним в Application несколько дней (нужно предусмотреть хранилище).
       //manager.deleteFolderRecursively()
@@ -126,6 +104,21 @@ class UploadServlet extends HttpServlet {
       case NonFatal(ex) =>
         log.error("error", ex)
         makeErrorResponse(ex.getLocalizedMessage, servletResponse)
+    }
+  }
+
+  private def processResultEmulation(manager: RequestReplyManager, originalFile: File, emulation: Option[EmulationResultData], message: String) = {
+    val verdict = emulation.map(_.combined_verdict).getOrElse("")
+    if (verdict.equalsIgnoreCase(VerdictValues.BENIGN)) {
+      //Если вердикт отрицательный (не вирус) – направляем в GMS оригинальный документ.
+      manager.sendCustomNoticeToChat(message)
+      val genesysUploadResponse = manager.uploadFileToChat(originalFile)
+      manager.copyGenesysResponseToServletResponse(genesysUploadResponse)
+    } else if (verdict.equalsIgnoreCase(VerdictValues.MALICIOUS)) {
+      //Если вердикт положительный (вирус) – направляем кастомные сообщения получателю и отправителю.
+      manager.sendCustomNoticeToChat(Configuration.messageIsInfectedFile)
+    } else {
+      //что-то пошло не так, например сервис возвращает VerdictValues.UNKNOWN
     }
   }
 
