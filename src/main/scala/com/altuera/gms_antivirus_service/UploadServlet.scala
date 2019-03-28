@@ -47,6 +47,7 @@ class UploadServlet extends HttpServlet {
 
   val STATUS_CODE_FAILED = 500
   val STATUS_CODE_OK = 200
+  val antivirus = new Antivirus()
   private val log = LoggerFactory.getLogger(this.getClass)
 
   @MultipartConfig(
@@ -56,46 +57,16 @@ class UploadServlet extends HttpServlet {
   override def doPost(servletRequest: HttpServletRequest, servletResponse: HttpServletResponse): Unit = {
     servletResponse.setStatus(STATUS_CODE_OK)
     servletResponse.setContentType("application/json")
-    val antivirus = new Antivirus()
+
     try {
       val manager = new RequestReplyManager(servletRequest, servletResponse)
       manager.validateServletRequestData()
       val originalFile = manager.getOriginalFile()
-      val fileType = detectFileType(originalFile)
-      if (fileType == FileTypes.IMAGE || fileType == FileTypes.DOC) {
-
-        val convertToPdf = fileType != FileTypes.IMAGE & fileType != FileTypes.EXCEL
-
-        antivirus.upload(originalFile, convertToPdf)
-        val threadExtraction = antivirus.threadExtractionQueryRetry(originalFile, convertToPdf)
-
-        val fileId: String = threadExtraction.flatMap(_.extracted_file_download_id)
-          .getOrElse(throw new Exception("file id not found"))
-        val outputFileName: String = threadExtraction.map(_.output_file_name)
-          .getOrElse(originalFile.getName)
-        val file = antivirus.download(fileId, outputFileName)
-          .getOrElse(throw new Exception("file not found"))
-
-        //Если файл был документом,
-        if (fileType == FileTypes.DOC) {
-          //то в кастомном сообщении должна содержаться ссылка/кнопка запросить оригинал.
-          //потому предварительно мы должны получить заключение от thead emulation о безопасности оригинального файла
-
-          //Отправляем получателю кастомное сообщение «Ожидание проверки на вирусы»
-          manager.sendCustomNoticeToChat(Configuration.messagePleaseWait)
-
-          val emulation: Option[EmulationResultData] = antivirus.threadEmulationQueryRetry(originalFile)
-          processResultEmulation(manager, originalFile, emulation, Configuration.messageIsSafeFileAndLinkToOriginal)
-
-        } else { //Полученный очищенный файл направляем получателю через GMS вместе с кастомным сообщением, что доставлена безопасная копия.
-          manager.sendCustomNoticeToChat(Configuration.messageIsSafeFile)
-          val genesysUploadResponse = manager.uploadFileToChat(originalFile)
-          manager.copyGenesysResponseToServletResponse(genesysUploadResponse)
-        }
-      }
-      else {
-        val emulation: Option[EmulationResultData] = antivirus.threadEmulationQueryRetry(originalFile)
-        processResultEmulation(manager, originalFile, emulation, Configuration.messageIsSafeFile)
+      val fileExtension = Utils.extractFileExt(originalFile.getName)
+      if (forThreadExtraction(fileExtension)) {
+        threadExtraction(manager, originalFile, fileExtension)
+      } else {
+        threadEmulation(manager, originalFile)
       }
       //todo Оригиналы храним в Application несколько дней (нужно предусмотреть хранилище).
       //manager.deleteFolderRecursively()
@@ -105,6 +76,12 @@ class UploadServlet extends HttpServlet {
         log.error("error", ex)
         makeErrorResponse(ex.getLocalizedMessage, servletResponse)
     }
+  }
+
+  private def threadEmulation(manager: RequestReplyManager, originalFile: File) = {
+    antivirus.upload(originalFile, List(ApiFeatures.THREAT_EMULATION))
+    val emulation: Option[EmulationResultData] = antivirus.threadEmulationQueryRetry(originalFile)
+    processResultEmulation(manager, originalFile, emulation, Configuration.messageIsSafeFile)
   }
 
   private def processResultEmulation(manager: RequestReplyManager, originalFile: File, emulation: Option[EmulationResultData], message: String) = {
@@ -122,20 +99,36 @@ class UploadServlet extends HttpServlet {
     }
   }
 
-  def detectFileType(file: File): String = {
-    val filelExt = Utils.extractFileExt(file.getName)
-    if (Configuration.avTypesImages.contains(filelExt)) {
-      FileTypes.IMAGE
-    }
-    else if (Configuration.avTypesDocs.contains(filelExt)) {
-      FileTypes.DOC
-    }
-    else if (Configuration.avTypesOthers.contains(filelExt)) {
-      FileTypes.OTHER
-    }
-    else {
-      FileTypes.UNSUPPORTED
-    }
+  private def threadExtraction(manager: RequestReplyManager, originalFile: File, fileType: String) = {
+    val extractionMethod = if (forConvertToPdf(fileType)) "pdf" else "clean"
+    antivirus.upload(originalFile, List(ApiFeatures.THREAT_EXTRACTION), extractionMethod)
+    val threadExtraction = antivirus.threadExtractionQueryRetry(originalFile, extractionMethod)
+
+    val file: File = downloadFile(originalFile.getName, threadExtraction)
+
+    //Полученный очищенный файл направляем получателю через GMS вместе с кастомным сообщением, что доставлена безопасная копия.
+    manager.sendCustomNoticeToChat(Configuration.messageIsSafeFile)
+    val genesysUploadResponse = manager.uploadFileToChat(file)
+    manager.copyGenesysResponseToServletResponse(genesysUploadResponse)
+
+  }
+
+  private def downloadFile(originalFileName: String, threadExtraction: Option[ExtractionResultData]) = {
+    val fileId: String = threadExtraction.flatMap(_.extracted_file_download_id)
+      .getOrElse(throw new Exception("file id not found"))
+    val outputFileName: String = threadExtraction.map(_.output_file_name)
+      .getOrElse(originalFileName)
+
+    antivirus.download(fileId, outputFileName)
+      .getOrElse(throw new Exception("file not found"))
+  }
+
+  private def forConvertToPdf(fileExtension: String): Boolean = {
+    Configuration.avExtensionsForConvertToPdf.contains(fileExtension)
+  }
+
+  private def forThreadExtraction(fileExtension: String): Boolean = {
+    Configuration.avExtensionsForThreadExtraction.contains(fileExtension)
   }
 
   private def makeErrorResponse(message: String, response: HttpServletResponse) = {

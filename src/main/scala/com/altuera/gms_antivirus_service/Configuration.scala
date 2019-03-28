@@ -29,13 +29,11 @@ object Configuration {
   def messageFileNotFound: String = getStringProperty("customNotices.fileNotFound")
 
   //File types
-  private val avFileTypes = config.getConfig("avApi.supportedFileTypes")
+  private val avFileExtensionsLists = config.getConfig("avApi.fileExtensionsLists")
 
-  def avTypesDocs: List[String] = avFileTypes.getStringList("docs").asScala.toList
+  def avExtensionsForThreadExtraction: List[String] = avFileExtensionsLists.getStringList("forThreadExtraction").asScala.toList
 
-  def avTypesImages: List[String] = avFileTypes.getStringList("images").asScala.toList
-
-  def avTypesOthers: List[String] = avFileTypes.getStringList("others").asScala.toList
+  def avExtensionsForConvertToPdf: List[String] = avFileExtensionsLists.getStringList("forConvertToPdf").asScala.toList
 
 
   //Threat Prevention API (Antivirus = av)

@@ -42,12 +42,4 @@ object Models {
       "pod_time_gmt",
       "quota_expiration")
   }
-
-
-  def main(args: Array[String]): Unit = {
-
-
-    //    println(QuotaResponse(1, 2, 3, 4, "", "", "", 5, 6, 7, 8, 9, 10, 11, "", ""))
-    //    println("".toJson.convertTo[QuotaResponse])
-  }
 }

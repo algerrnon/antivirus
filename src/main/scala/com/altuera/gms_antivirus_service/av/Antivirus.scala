@@ -45,7 +45,7 @@ class Antivirus {
     * @param file
     * @return
     */
-  def upload(file: File, convertToPdf: Boolean = true): Boolean = {
+  def upload(file: File, apiFeatures: List[String], extractionMethod: String = "clean"): Boolean = {
     val fileName = file.getName //"example: MyFile.docx"
     val fileType = Utils.extractFileExt(fileName) //example: "docx"
     val md5 = getMd5(file)
@@ -56,12 +56,10 @@ class Antivirus {
         "file_name" -> JsString(fileName),
         "file_type" -> JsString(fileType),
         "md5" -> JsString(md5),
-        "features" -> JsArray(JsString(ApiFeatures.THREAT_EMULATION),
-          JsString(ApiFeatures.THREAT_EXTRACTION),
-          JsString(ApiFeatures.ANTIVIRUS)),
+        "features" -> apiFeatures.toJson,
 
         "extraction" ->
-          JsObject("method" -> JsString(if (convertToPdf) "pdf" else "clean"),
+          JsObject("method" -> JsString(extractionMethod),
             "extracted_parts_codes" -> JsArray()), //todo
         "te" ->
           JsObject("reports" ->
@@ -153,12 +151,9 @@ class Antivirus {
   /**
     *
     * @param file
-    * @param convertToPdf если переменная равна true, то файл конвертируется в pdf,
-    *                     если равна false, то конвертации в pdf не происходит, а выполняется
-    *                     попытка очистить оригинальный файл от вредоносных элементов
     * @return
     */
-  def threadExtractionQueryRetry(file: File, convertToPdf: Boolean): Option[ExtractionResultData] = {
+  def threadExtractionQueryRetry(file: File, extractionMethod: String): Option[ExtractionResultData] = {
     implicit val isDefined = retry.Success[Option[(Boolean, ExtractionResultData)]](x => x != null && x.isDefined && x.get._1)
 
     def doRetry() = {
@@ -168,7 +163,7 @@ class Antivirus {
 
         .apply(() => Future {
         log.trace("retry")
-        threadExtractionQuery(file, convertToPdf)
+        threadExtractionQuery(file, extractionMethod)
       })
     }
 
@@ -186,10 +181,9 @@ class Antivirus {
     *
     * extracted_parts_codes Values - Only relevant if method = clean
     *
-    * @param convertToPdf
     * @return
     */
-  def threadExtractionQuery(file: File, convertToPdf: Boolean): Option[(Boolean, ExtractionResultData)] = {
+  def threadExtractionQuery(file: File, extractionMethod: String = "clean"): Option[(Boolean, ExtractionResultData)] = {
     val checksum = getMd5(file)
     val fileName = file.getName
     val fileType = Utils.extractFileExt(fileName)
@@ -202,7 +196,7 @@ class Antivirus {
         "features" -> JsArray(JsString(ApiFeatures.THREAT_EXTRACTION), JsString(ApiFeatures.ANTIVIRUS)
         ),
         "extraction" ->
-          JsObject("method" -> JsString(if (convertToPdf) "pdf" else "clean"),
+          JsObject("method" -> JsString(extractionMethod),
             "extracted_parts_codes" -> JsArray(extractedParts)) //todo
       )
     )
