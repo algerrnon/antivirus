@@ -1,6 +1,6 @@
 import java.io.File
 
-import com.altuera.gms_antivirus_service.tpapi.{Antivirus, ExtractResultsStatuses, ExtractionResultData}
+import com.altuera.gms_antivirus_service.av.{Antivirus, ExtractResultsStatuses, ExtractionResultData}
 
 object Test3 {
 
@@ -16,7 +16,7 @@ object Test3 {
       val extrResultObj = extractionResultData.get
       val success = extrResultObj.extract_result.equalsIgnoreCase(ExtractResultsStatuses.CP_EXTRACT_RESULT_SUCCESS)
       if (extrResultObj.extracted_file_download_id.isDefined) {
-        val resFile = client.download(extrResultObj.extracted_file_download_id.getOrElse(""), Some(extrResultObj.output_file_name))
+        val resFile = client.download(extrResultObj.extracted_file_download_id.getOrElse(""), extrResultObj.output_file_name)
         println(resFile)
       }
       else {

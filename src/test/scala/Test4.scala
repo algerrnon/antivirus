@@ -1,10 +1,11 @@
-import java.io.File
 
-import com.altuera.gms_antivirus_service.tpapi.{Antivirus, EmulationResultData, VerdictValues}
 
 object Test4 {
 
   def main(args: Array[String]): Unit = {
+    //println(Some(EmulationResultData("anus")).flatMap(_.combined_verdict))
+
+    /*
     val client = new Antivirus()
     val file: File = new File("/home/algernon/av/Selection_136.png")
     println(client.upload(file))
@@ -15,5 +16,6 @@ object Test4 {
     else {
       println("не удалось вовремя получить ответ")
     }
+    */
   }
 }

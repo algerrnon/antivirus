@@ -4,7 +4,6 @@ package com.altuera.gms_antivirus_service
 import java.io.{File, IOException}
 import java.util.UUID
 
-import com.altuera.gms_antivirus_service.tpapi.Antivirus
 import com.softwaremill.sttp.Response
 import javax.servlet.http.{HttpServletRequest, HttpServletResponse}
 import org.apache.commons.fileupload.servlet.ServletFileUpload
@@ -20,7 +19,6 @@ import scala.util.{Failure, Success, Try}
 object RequestReplyManager {
   val baseDirectoryForTemporaryDirs = Utils.createDirIfNotExist(Configuration.uploadDir)
   val genesysClient = new GenesysApiClient(Configuration.genesysApiBaseUrl)
-  val teClient = new Antivirus()
 
 }
 
@@ -224,5 +222,6 @@ class RequestReplyManager(request: HttpServletRequest,
   def getOriginalFile(): File = {
     data.file
   }
+
 }
 

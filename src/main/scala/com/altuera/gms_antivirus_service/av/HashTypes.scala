@@ -1,5 +1,5 @@
 // © LLC "Altuera", 2019
-package com.altuera.gms_antivirus_service.tpapi
+package com.altuera.gms_antivirus_service.av
 
 /**
   * Response HTTP Status Codes of Threat Prevention API 1.0

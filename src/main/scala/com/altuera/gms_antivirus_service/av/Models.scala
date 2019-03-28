@@ -1,5 +1,5 @@
 // © LLC "Altuera", 2019
-package com.altuera.gms_antivirus_service.tpapi
+package com.altuera.gms_antivirus_service.av
 
 object Models {
 
@@ -24,7 +24,30 @@ object Models {
 
 
   object QuotaResponseItemProtocol extends DefaultJsonProtocol {
-    implicit val ResponseItemFormat = jsonFormat16(QuotaResponse)
+    implicit val ResponseItemFormat = jsonFormat(QuotaResponse,
+      "remain_quota_hour",
+      "remain_quota_month",
+      "assigned_quota_hour",
+      "assigned_quota_month",
+      "hourly_quota_next_reset",
+      "monthly_quota_next_reset",
+      "cloud_monthly_quota_period_start",
+      "cloud_monthly_quota_usage_for_this_gw",
+      "cloud_hourly_quota_usage_for_this_gw",
+      "cloud_monthly_quota_usage_for_quota_id",
+      "cloud_hourly_quota_usage_for_quota_id",
+      "monthly_exceeded_quota",
+      "hourly_exceeded_quota",
+      "cloud_quota_max_allow_to_exceed_percentage",
+      "pod_time_gmt",
+      "quota_expiration")
   }
 
+
+  def main(args: Array[String]): Unit = {
+
+
+    //    println(QuotaResponse(1, 2, 3, 4, "", "", "", 5, 6, 7, 8, 9, 10, 11, "", ""))
+    //    println("".toJson.convertTo[QuotaResponse])
+  }
 }

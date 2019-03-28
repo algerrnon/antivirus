@@ -3,7 +3,7 @@ package com.altuera.gms_antivirus_service
 
 import java.io.File
 
-import com.altuera.gms_antivirus_service.tpapi._
+import com.altuera.gms_antivirus_service.av._
 import javax.servlet.annotation.{MultipartConfig, WebServlet}
 import javax.servlet.http.{HttpServlet, HttpServletRequest, HttpServletResponse}
 import org.slf4j.LoggerFactory
@@ -56,61 +56,67 @@ class UploadServlet extends HttpServlet {
   override def doPost(servletRequest: HttpServletRequest, servletResponse: HttpServletResponse): Unit = {
     servletResponse.setStatus(STATUS_CODE_OK)
     servletResponse.setContentType("application/json")
-    val teClient = new Antivirus()
-
+    val antivirus = new Antivirus()
     try {
       val manager = new RequestReplyManager(servletRequest, servletResponse)
       manager.validateServletRequestData()
       val originalFile = manager.getOriginalFile()
       val fileType = detectFileType(originalFile)
+      if (fileType == FileTypes.IMAGE || fileType == FileTypes.DOC) {
 
-      var threadExtraction: Option[ExtractionResultData] = None
-      if (fileType == FileTypes.IMAGE || fileType == FileTypes.EXCEL) {
-        threadExtraction = teClient.threadExtractionQueryRetry(originalFile, convertToPdf = false)
+        val convertToPdf = fileType != FileTypes.IMAGE & fileType != FileTypes.EXCEL
+
+        antivirus.upload(originalFile, convertToPdf)
+        val threadExtraction = antivirus.threadExtractionQueryRetry(originalFile, convertToPdf)
+
+        val fileId: String = threadExtraction.flatMap(_.extracted_file_download_id)
+          .getOrElse(throw new Exception("file id not found"))
+        val outputFileName: String = threadExtraction.map(_.output_file_name)
+          .getOrElse(originalFile.getName)
+        val file = antivirus.download(fileId, outputFileName)
+          .getOrElse(throw new Exception("file not found"))
+
+        //Если файл был документом,
+        if (fileType == FileTypes.DOC) {
+          //то в кастомном сообщении должна содержаться ссылка/кнопка запросить оригинал.
+          //потому предварительно мы должны получить заключение от thead emulation о безопасности оригинального файла
+
+          //Отправляем получателю кастомное сообщение «Ожидание проверки на вирусы»
+          manager.sendCustomNoticeToChat(Configuration.messagePleaseWait)
+
+          val emulation: Option[EmulationResultData] = antivirus.threadEmulationQueryRetry(originalFile)
+          val verdict = emulation.map(_.combined_verdict).getOrElse("")
+          if (verdict.equalsIgnoreCase(VerdictValues.BENIGN)) {
+            //Если вердикт отрицательный (не вирус) – направляем в GMS оригинальный документ.
+            manager.sendCustomNoticeToChat(Configuration.messageIsSafeFileAndLinkToOriginal)
+            val genesysUploadResponse = manager.uploadFileToChat(originalFile)
+            manager.copyGenesysResponseToServletResponse(genesysUploadResponse)
+          } else if (verdict.equalsIgnoreCase(VerdictValues.MALICIOUS)) {
+            //Если вердикт положительный (вирус) – направляем кастомные сообщения получателю и отправителю.
+            manager.sendCustomNoticeToChat(Configuration.messageIsInfectedFile)
+          } else {
+            //что-то пошло не так, например сервис возвращает VerdictValues.UNKNOWN
+          }
+
+        } else { //Полученный очищенный файл направляем получателю через GMS вместе с кастомным сообщением, что доставлена безопасная копия.
+          manager.sendCustomNoticeToChat(Configuration.messageIsSafeFile)
+          val genesysUploadResponse = manager.uploadFileToChat(originalFile)
+          manager.copyGenesysResponseToServletResponse(genesysUploadResponse)
+        }
       }
       else {
-        threadExtraction = teClient.threadExtractionQueryRetry(originalFile, convertToPdf = true)
-      }
-
-      if (threadExtraction.isDefined) {
-        val teResultObj = threadExtraction.get
-        val success = teResultObj.extract_result.equalsIgnoreCase(ExtractResultsStatuses.CP_EXTRACT_RESULT_SUCCESS)
-        if (teResultObj.extracted_file_download_id.isDefined) {
-          val resFile = {
-            teClient.download(teResultObj.extracted_file_download_id.getOrElse(""), Some(teResultObj.output_file_name))
-          }
-          if (resFile.isDefined) {
-            if (fileType == FileTypes.DOC) {
-              //доставлена безопасная копия с линком для получения оригинального файла
-              manager.sendCustomNoticeToChat(Configuration.messageIsSafeFileAndLinkToOriginal)
-            }
-            else {
-              //доставлена безопасная копия
-              manager.sendCustomNoticeToChat(Configuration.messageIsSafeFile)
-            }
-            val genesysUploadResponse = manager.uploadFileToChat(resFile.get)
-            manager.copyGenesysResponseToServletResponse(genesysUploadResponse)
-          }
-        }
-        else {
-          log.trace("очищенный файл не получен: нечего удалять, или произошла ошибка, или сервис не отвечает более 60 секунд, или файл зашифрован, или другая причина") //todo https://sc1.checkpoint.com/documents/TPAPI/CP_1.0_ThreatPreventionAPI_APIRefGuide/html_frameset.htm?topic=documents/TPAPI/CP_1.0_ThreatPreventionAPI_APIRefGuide/189793
-          //manager.sendCustomNoticeToChat(Configuration.messageFileNotFound)
-        }
-
-        if (fileType == FileTypes.DOC) {
-          manager.sendCustomNoticeToChat("Ожидание проверки на вирусы")
-          val emulation: Option[EmulationResultData] = teClient.threadEmulationQueryRetry(originalFile)
-          if (emulation.isDefined) {
-            if (!emulation.get.combined_verdict.equalsIgnoreCase(VerdictValues.BENIGN)) {
-              manager.uploadFileToChat(originalFile)
-            }
-            else {
-              manager.sendCustomNoticeToChat(Configuration.messageIsInfectedFile)
-            }
-          }
-          else {
-            log.trace("не удалось вовремя получить ответ")
-          }
+        val emulation: Option[EmulationResultData] = antivirus.threadEmulationQueryRetry(originalFile)
+        val verdict = emulation.map(_.combined_verdict).getOrElse("")
+        if (verdict.equalsIgnoreCase(VerdictValues.BENIGN)) {
+          //Если вердикт отрицательный (не вирус) – направляем в GMS оригинальный файл
+          manager.sendCustomNoticeToChat(Configuration.messageIsSafeFile)
+          val genesysUploadResponse = manager.uploadFileToChat(originalFile)
+          manager.copyGenesysResponseToServletResponse(genesysUploadResponse)
+        } else if (verdict.equalsIgnoreCase(VerdictValues.MALICIOUS)) {
+          //Если вердикт положительный (вирус) – направляем кастомные сообщения получателю и отправителю.
+          manager.sendCustomNoticeToChat(Configuration.messageIsInfectedFile)
+        } else {
+          //что-то пошло не так, например сервис возвращает VerdictValues.UNKNOWN
         }
       }
       //todo Оригиналы храним в Application несколько дней (нужно предусмотреть хранилище).

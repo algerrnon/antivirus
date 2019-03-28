@@ -1,5 +1,5 @@
 // © LLC "Altuera", 2019
-package com.altuera.gms_antivirus_service.tpapi
+package com.altuera.gms_antivirus_service.av
 
 /**
   * Threat Extraction cleans files. If the components of files are not given in the extracted_parts_codes field,

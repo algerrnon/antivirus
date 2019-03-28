@@ -1,4 +1,4 @@
-package com.altuera.gms_antivirus_service.tpapi
+package com.altuera.gms_antivirus_service.av
 
 /**
   * * API Codes of Threat Prevention API 1.0

@@ -1,5 +1,5 @@
 // © LLC "Altuera", 2019
-package com.altuera.gms_antivirus_service.tpapi
+package com.altuera.gms_antivirus_service.av
 
 import java.io.File
 import java.lang.invoke.MethodHandles
@@ -7,9 +7,9 @@ import java.nio.file.Files
 import java.security.{DigestInputStream, MessageDigest}
 import java.util.concurrent.TimeUnit
 
-import com.altuera.gms_antivirus_service.tpapi.Models.QuotaResponse
-import com.altuera.gms_antivirus_service.tpapi.Models.QuotaResponseItemProtocol._
-import com.altuera.gms_antivirus_service.{Configuration, Utils, tpapi}
+import com.altuera.gms_antivirus_service.av.Models.QuotaResponse
+import com.altuera.gms_antivirus_service.av.Models.QuotaResponseItemProtocol._
+import com.altuera.gms_antivirus_service.{Configuration, Utils, av}
 import com.softwaremill.sttp.{multipart, _}
 import org.slf4j.LoggerFactory
 import spray.json.{JsObject, _}
@@ -58,7 +58,7 @@ class Antivirus {
         "md5" -> JsString(md5),
         "features" -> JsArray(JsString(ApiFeatures.THREAT_EMULATION),
           JsString(ApiFeatures.THREAT_EXTRACTION),
-          JsString(ApiFeatures.ANTI_VIRUS)),
+          JsString(ApiFeatures.ANTIVIRUS)),
 
         "extraction" ->
           JsObject("method" -> JsString(if (convertToPdf) "pdf" else "clean"),
@@ -92,7 +92,7 @@ class Antivirus {
           fields("status").asJsObject.
           fields("code").convertTo[Int]
 
-        apiCode == tpapi.ApiCodes.FOUND || apiCode == ApiCodes.UPLOAD_SUCCESS
+        apiCode == av.ApiCodes.FOUND || apiCode == ApiCodes.UPLOAD_SUCCESS
       }
     }
   }
@@ -140,8 +140,8 @@ class Antivirus {
     *           Изначально идентификатор получается из запросов #query и #upload
     * @return
     */
-  def download(id: String, fileName: Option[String]): Option[File] = {
-    val file = Utils.createNewTempDirAndTempFileInDir(baseDirectoryForTemporaryDirs, fileName.getOrElse(id))
+  def download(id: String, fileName: String): Option[File] = {
+    val file = Utils.createNewTempDirAndTempFileInDir(baseDirectoryForTemporaryDirs, fileName)
     val response = sttp
       .get(DOWNLOAD_PATH.params("id" -> id))
       .header("Authorization", API_KEY)
@@ -150,6 +150,14 @@ class Antivirus {
     Some(file)
   }
 
+  /**
+    *
+    * @param file
+    * @param convertToPdf если переменная равна true, то файл конвертируется в pdf,
+    *                     если равна false, то конвертации в pdf не происходит, а выполняется
+    *                     попытка очистить оригинальный файл от вредоносных элементов
+    * @return
+    */
   def threadExtractionQueryRetry(file: File, convertToPdf: Boolean): Option[ExtractionResultData] = {
     implicit val isDefined = retry.Success[Option[(Boolean, ExtractionResultData)]](x => x != null && x.isDefined && x.get._1)
 
@@ -157,7 +165,7 @@ class Antivirus {
       retry.Pause(
         delay = Duration(PAUSE_BETWEEN_ATTEMPTS_MILLISECONDS, TimeUnit.MILLISECONDS),
         max = MAX_NUMBER_OF_TIMES) //количество попыток (на единицу больше чем max)
-        
+
         .apply(() => Future {
         log.trace("retry")
         threadExtractionQuery(file, convertToPdf)
@@ -191,7 +199,7 @@ class Antivirus {
         "md5" -> JsString(checksum),
         "file_name" -> JsString(fileName),
         "file_type" -> JsString(fileType),
-        "features" -> JsArray(JsString(ApiFeatures.THREAT_EXTRACTION), JsString(ApiFeatures.ANTI_VIRUS)
+        "features" -> JsArray(JsString(ApiFeatures.THREAT_EXTRACTION), JsString(ApiFeatures.ANTIVIRUS)
         ),
         "extraction" ->
           JsObject("method" -> JsString(if (convertToPdf) "pdf" else "clean"),
