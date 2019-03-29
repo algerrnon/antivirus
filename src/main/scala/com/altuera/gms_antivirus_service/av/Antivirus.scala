@@ -22,7 +22,7 @@ import scala.util.Try
 
 class Antivirus {
 
-  private val baseDirectoryForTemporaryDirs = Utils.createDirIfNotExist(Configuration.uploadDir)
+  private val baseDirectoryForTemporaryDirs = Utils.createDirIfNotExist(Configuration.uploadBaseDir)
   private val DOMAIN = Configuration.avApiServerAddress
   private val API_PATH = s"/tecloud/api/${Configuration.avApiVersion}/file/"
   private val TE_API_URL = "https://" + DOMAIN + API_PATH

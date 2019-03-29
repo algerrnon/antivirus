@@ -9,7 +9,9 @@ object Configuration {
 
   private val config = ConfigFactory.load()
 
-  def uploadDir: String = getStringProperty("uploadDir")
+  def uploadBaseDir: String = getStringProperty("uploadBaseDir")
+
+  def storageBaseDir: String = getStringProperty("storageBaseDir")
 
   def genesysApiBaseUrl: String = getStringProperty("genesysApi.baseUrl")
 

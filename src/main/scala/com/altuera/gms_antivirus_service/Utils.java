@@ -6,12 +6,14 @@ import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.File;
+import java.io.IOException;
 import java.lang.invoke.MethodHandles;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Map;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.util.*;
 import java.util.stream.Collectors;
+
 
 public class Utils {
 
@@ -32,7 +34,7 @@ public class Utils {
     Enumeration<String> headerNames = request.getHeaderNames();
     Map<String, String> headers = new HashMap<>();
     if (headerNames != null) {
-      headers = Collections.list(request.getHeaderNames())
+      headers = Collections.list(headerNames)
         .stream()
         .collect(Collectors.toMap(h -> h, request::getHeader));
     }
@@ -120,4 +122,37 @@ public class Utils {
       return fileName.substring(lastIndex + 1);
     }
   }
+
+  public static File copyFileToSeparateTempDir(File sourceFile, File baseDirectoryForTemporaryDir) {
+    File targetFile = null;
+    try {
+      targetFile = createNewTempDirAndTempFileInDir(baseDirectoryForTemporaryDir, sourceFile.getName());
+      Files.copy(Paths.get(sourceFile.getPath()), Paths.get(targetFile.getPath()), StandardCopyOption.REPLACE_EXISTING);
+    } catch (CreateTempDirAndTempFileException ex) {
+      log.error("ошибка создания временной директории", ex);
+    } catch (IOException ex) {
+      log.error("ошибка копирования файла", ex);
+    }
+    if (targetFile != null) {
+      return targetFile;
+    } else {
+      throw new IllegalStateException("не удалось скопировать файл");
+    }
+  }
+
+  public static Optional<File> getFileByBaseDirAndSeparateTempDir(File baseDirectoryForTemporaryDir, String tempDirName) {
+    try {
+      File dir = Paths.get(baseDirectoryForTemporaryDir.getCanonicalPath() + File.separator + tempDirName).toFile();
+      if (dir != null) {
+        File[] files = dir.listFiles();
+        if (files.length > 0) {
+          return Optional.of(files[0]);
+        }
+      }
+    } catch (IOException ex) {
+      log.trace("ошибка при поиске файла", ex);
+    }
+    return Optional.empty();
+  }
+
 }
