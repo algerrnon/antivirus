@@ -2,13 +2,15 @@
 package com.altuera.gms_antivirus_service.file_storage
 
 import java.io._
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 
 import com.altuera.gms_antivirus_service.{Configuration, Utils}
 import javax.servlet.annotation.WebServlet
 import javax.servlet.http.{HttpServlet, HttpServletRequest, HttpServletResponse}
 import org.apache.commons.io.IOUtils
 import org.slf4j.LoggerFactory
-import spray.json.{JsObject, JsString}
+import spray.json.{JsNumber, JsObject, JsString}
 
 import scala.util.control.NonFatal
 
@@ -22,7 +24,6 @@ import scala.util.control.NonFatal
   loadOnStartup = 1
 )
 class FileDownloadServlet extends HttpServlet {
-  val defaultEncoding = System.getProperty("file.encoding")
   private val log = LoggerFactory.getLogger(this.getClass)
   val baseDirectoryForStorageDirs = Utils.createDirIfNotExist(Configuration.storageBaseDir)
 
@@ -57,20 +58,16 @@ class FileDownloadServlet extends HttpServlet {
   def downloadFile(file: File, response: HttpServletResponse): Unit = {
     val fileName: String = file.getName
     response.setCharacterEncoding("utf-8")
-    response.setContentType("application/force-download")
+    //response.setContentType("application/force-download")
     //response.setContentType("application/octet-stream")
     response.setHeader("Content-Length", "" + file.length())
     response.setHeader("Content-Description", "File Transfer")
     response.setHeader("Content-Transfer-Encoding", "binary")
-    response.setDateHeader("Expires", 0)
-    response.setHeader("Cache-Control", "must-revalidate, post-check=0, pre-check=0")
-    response.setHeader("Pragma", "public")
     response.setStatus(HttpServletResponse.SC_OK)
 
-    if (defaultEncoding != null && defaultEncoding == "UTF-8") response.addHeader("Content-Disposition",
-      "attachment;filename=" + new String(fileName.getBytes("GBK"), "iso-8859-1"))
-    else response.addHeader("Content-Disposition",
-      "attachment;filename=" + new String(fileName.getBytes, "iso-8859-1"))
+    val utf8FileName = URLEncoder.encode(fileName, StandardCharsets.UTF_8.toString).replaceAll("\\+", "%20")
+    val contentDisposition = "attachment; filename=\"" + fileName + "\"; filename*=UTF-8''" + utf8FileName
+    response.addHeader("Content-Disposition", contentDisposition)
 
     val fileInputStream = new FileInputStream(file)
     val servletOutputStream = response.getOutputStream
@@ -81,18 +78,19 @@ class FileDownloadServlet extends HttpServlet {
     servletOutputStream.close()
   }
 
-  private def makeResponse(response: HttpServletResponse, message: String): Unit = {
+  private def makeResponse(response: HttpServletResponse, message: String, code: Int = 0): Unit = {
     response.resetBuffer
     response.setStatus(HttpServletResponse.SC_OK)
     response.setContentType("application/json")
     response.setCharacterEncoding("UTF-8")
-    response.getOutputStream.print(JsObject("message" -> JsString(message)).toString)
+    response.setHeader("Cache-Control", "no-cache")
+    response.getOutputStream.print(JsObject("message" -> JsString(message), "code" -> JsNumber(code)).toString)
     response.flushBuffer //marks response as committed -- if we don't do this the request will go through normally!
   }
 
   private def makeResponse(response: HttpServletResponse, throwable: Throwable): Unit = {
-    var message = throwable.toString
-    makeResponse(response, message)
+    var message = s"${throwable.toString}:${throwable.getLocalizedMessage}"
+    makeResponse(response, message, 0)
   }
 }
 
