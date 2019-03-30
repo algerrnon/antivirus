@@ -10,26 +10,25 @@
     </encoder>
   </appender>
 
-  <!--  <appender name="FILE"
-            class="ch.qos.logback.core.rolling.RollingFileAppender">
-            <file>../logs/provider.log</file>
-            <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-                &lt;!&ndash; daily rollover &ndash;&gt;
-                <fileNamePattern>../logs/provider.%d{yyyy-MM-dd}.log
-                </fileNamePattern>
+  <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <file>../logs/gms-antivirus-service.log</file>
+    <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+      <!-- daily rollover -->
+      <fileNamePattern>../logs/gms-antivirus-service.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+      <maxFileSize>50MB</maxFileSize>
+      <!-- keep 30 days' worth of history -->
+      <maxHistory>30</maxHistory>
+    </rollingPolicy>
 
-                &lt;!&ndash; keep 30 days' worth of history &ndash;&gt;
-                <maxHistory>30</maxHistory>
-            </rollingPolicy>
-
-            <encoder>
-                <pattern>%d{dd.MM.yyyy HH:mm:ss.SSS} [%thread] %-5level %logger{0}:%L
-                    - %msg%n</pattern>
-            </encoder>
-        </appender>-->
+    <encoder>
+      <pattern>%d{dd.MM.yyyy HH:mm:ss.SSS} [%thread] %-5level %logger{0}:%L
+        - %msg%n
+      </pattern>
+    </encoder>
+  </appender>
 
   <root level="trace">
     <appender-ref ref="STDOUT"/>
-    <!--  <appender-ref ref="FILE" />-->
+    <appender-ref ref="FILE"/>
   </root>
 </configuration>
