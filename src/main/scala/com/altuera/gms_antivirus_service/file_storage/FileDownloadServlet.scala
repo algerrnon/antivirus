@@ -40,7 +40,7 @@ class FileDownloadServlet extends HttpServlet {
     response.reset()
     val fileId = request.getParameter("fileId")
     if (!fileId.isEmpty) {
-      val fileFromStorage = Utils.getFileByBaseDirAndSeparateTempDir(baseDirectoryForStorageDirs, fileId)
+      val fileFromStorage = Utils.getFileByBaseDirAndSeparateTempDirName(baseDirectoryForStorageDirs, fileId)
       if (fileFromStorage.isPresent) {
 
         downloadFile(fileFromStorage.get(), response)
@@ -65,17 +65,20 @@ class FileDownloadServlet extends HttpServlet {
     response.setDateHeader("Expires", 0)
     response.setHeader("Cache-Control", "must-revalidate, post-check=0, pre-check=0")
     response.setHeader("Pragma", "public")
+    response.setStatus(HttpServletResponse.SC_OK)
 
     if (defaultEncoding != null && defaultEncoding == "UTF-8") response.addHeader("Content-Disposition",
       "attachment;filename=" + new String(fileName.getBytes("GBK"), "iso-8859-1"))
     else response.addHeader("Content-Disposition",
       "attachment;filename=" + new String(fileName.getBytes, "iso-8859-1"))
-    val os = response.getOutputStream
+
     val fileInputStream = new FileInputStream(file)
-    IOUtils.copy(fileInputStream, os)
+    val servletOutputStream = response.getOutputStream
+    IOUtils.copy(fileInputStream, servletOutputStream)
+
     fileInputStream.close()
-    os.flush()
-    os.close()
+    servletOutputStream.flush()
+    servletOutputStream.close()
   }
 
   private def makeResponse(response: HttpServletResponse, message: String): Unit = {

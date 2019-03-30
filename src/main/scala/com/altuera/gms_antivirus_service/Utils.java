@@ -123,6 +123,14 @@ public class Utils {
     }
   }
 
+  /**
+   * Создаём директорию со случайным уникальным именем внутри директории baseDirectoryForTemporaryDir
+   * Копируем файл sourceFile в созданную директорию.
+   *
+   * @param sourceFile                   исходный файл для копирования
+   * @param baseDirectoryForTemporaryDir базовая директория
+   * @return копия исходного файла
+   */
   public static File copyFileToSeparateTempDir(File sourceFile, File baseDirectoryForTemporaryDir) {
     File targetFile = null;
     try {
@@ -140,7 +148,18 @@ public class Utils {
     }
   }
 
-  public static Optional<File> getFileByBaseDirAndSeparateTempDir(File baseDirectoryForTemporaryDir, String tempDirName) {
+  /**
+   * Получаем файл из хранилища оригинальных файлов.
+   * Предполагается, что внутри директории baseDirectoryForTemporaryDir
+   * находятся временные каталоги с именами вида 1553873076585-0
+   * внутри каждого из таких временных каталогов содержится 1 файл.
+   * Чтобы получить этот файл достаточно знать baseDirectoryForTemporaryDir и имя временной директории
+   *
+   * @param baseDirectoryForTemporaryDir базовая директория в которой выполняется поиск
+   * @param tempDirName                  имя директории в которой содержится интересущий нас файл
+   * @return файл наденный внутри tempDirName
+   */
+  public static Optional<File> getFileByBaseDirAndSeparateTempDirName(File baseDirectoryForTemporaryDir, String tempDirName) {
     try {
       File dir = Paths.get(baseDirectoryForTemporaryDir.getCanonicalPath() + File.separator + tempDirName).toFile();
       if (dir != null) {
