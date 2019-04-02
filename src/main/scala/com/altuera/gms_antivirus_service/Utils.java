@@ -32,13 +32,14 @@ public class Utils {
    */
   public static Map<String, String> getRequestHeaders(HttpServletRequest request) {
     Enumeration<String> headerNames = request.getHeaderNames();
+    log.trace("получили имена заголовков");
     Map<String, String> headers = new HashMap<>();
     if (headerNames != null) {
       headers = Collections.list(headerNames)
         .stream()
         .collect(Collectors.toMap(h -> h, request::getHeader));
     }
-    log.trace(String.valueOf(headerNames));
+    log.trace("получили map заголовков" + String.valueOf(headerNames));
     return headers;
   }
 
@@ -52,10 +53,16 @@ public class Utils {
    */
   public static File createNewTempDirAndTempFileInDir(File baseDir, String fileName) throws CreateTempDirAndTempFileException {
     File tempDirectory = createTempDirectoryInsideBaseDir(baseDir);
+    log.trace("создали временную директорию {} внутри базовой директории {}",
+      tempDirectory, baseDir);
     if (tempDirectory != null) {
       File tempFile = new File(tempDirectory.getAbsolutePath() + File.separator + fileName);
+      log.trace("создали временный файл {} внутри временной директории ", tempFile);
       return tempFile;
     }
+
+    log.error("ошибка создания файла или директории. Базовая директория {} имя файла {}",
+      baseDir, fileName);
     throw new CreateTempDirAndTempFileException("Could not create temporary file or directory", null);
   }
 
@@ -68,15 +75,18 @@ public class Utils {
   private static File createTempDirectoryInsideBaseDir(File baseDir) throws CreateTempDirAndTempFileException {
 
     String baseName = System.currentTimeMillis() + "-";
+    log.trace("базовое имя временной директории {}", baseName);
 
     for (int counter = 0; counter < TEMP_DIR_ATTEMPTS; counter++) {
       File tempDir = new File(baseDir, baseName + counter);
       if (tempDir.mkdir()) {
+        log.trace("окончательное имя временной директории {}", tempDir);
+        log.trace("число попыток подбора уникального имени {}", counter);
         return tempDir;
       }
-      log.error("Failed to create directory within {} attempts (tried {} 0 to {} {})",
-        TEMP_DIR_ATTEMPTS, baseName, baseName, TEMP_DIR_ATTEMPTS - 1);
     }
+    log.error("не удалось создать директорию с базовыми именем {} Количество выполненных попыток {}",
+      baseName, TEMP_DIR_ATTEMPTS - 1);
     throw new CreateTempDirAndTempFileException("Failed to create directory ", null);
   }
 
