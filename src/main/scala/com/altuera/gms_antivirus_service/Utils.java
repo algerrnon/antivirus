@@ -110,7 +110,7 @@ public class Utils {
    * @param directory
    */
   public static void deleteFolderRecursively(File directory) {
-    log.trace("delete folder {}", directory);
+    log.trace("удаляем директорию {}", directory);
     if (directory != null && directory.exists() && directory.isDirectory()) {
       File[] files = directory.listFiles();
       for (File file : files) {
@@ -127,9 +127,12 @@ public class Utils {
   public static String extractFileExt(String fileName) {
     int lastIndex = fileName.lastIndexOf(".");
     if (lastIndex == -1) {
+      log.trace("файл с именем {} не имеет расширения", fileName);
       return "";
     } else {
-      return fileName.substring(lastIndex + 1);
+      String fileExtension = fileName.substring(lastIndex + 1);
+      log.trace("получили расширение {} для имени файла {} ", fileExtension, fileName);
+      return fileExtension;
     }
   }
 
@@ -141,20 +144,23 @@ public class Utils {
    * @param baseDirectoryForTemporaryDir базовая директория
    * @return копия исходного файла
    */
-  public static File copyFileToSeparateTempDir(File sourceFile, File baseDirectoryForTemporaryDir) {
+  public static File copyFileToSeparateTempDir(File sourceFile, File baseDirectoryForTemporaryDir) throws IOException, CreateTempDirAndTempFileException {
     File targetFile = null;
     try {
       targetFile = createNewTempDirAndTempFileInDir(baseDirectoryForTemporaryDir, sourceFile.getName());
       Files.copy(Paths.get(sourceFile.getPath()), Paths.get(targetFile.getPath()), StandardCopyOption.REPLACE_EXISTING);
     } catch (CreateTempDirAndTempFileException ex) {
       log.error("ошибка создания временной директории", ex);
+      throw ex;
     } catch (IOException ex) {
       log.error("ошибка копирования файла", ex);
+      throw ex;
     }
     if (targetFile != null) {
       return targetFile;
     } else {
-      throw new IllegalStateException("не удалось скопировать файл");
+      log.error("не удалось создать файл {}", targetFile.getPath());
+      throw new IllegalStateException("не удалось создать файл");
     }
   }
 
@@ -170,16 +176,20 @@ public class Utils {
    * @return файл наденный внутри tempDirName
    */
   public static Optional<File> getFileByBaseDirAndSeparateTempDirName(File baseDirectoryForTemporaryDir, String tempDirName) {
-    try {
-      File dir = Paths.get(baseDirectoryForTemporaryDir.getCanonicalPath() + File.separator + tempDirName).toFile();
-      if (dir != null) {
-        File[] files = dir.listFiles();
-        if (files.length > 0) {
-          return Optional.of(files[0]);
-        }
+    log.trace("выполняем поиск файла внутри временной директории {} расположенной в {}",
+      tempDirName, baseDirectoryForTemporaryDir);
+    File dir = Paths.get(baseDirectoryForTemporaryDir.getAbsolutePath() + File.separator + tempDirName).toFile();
+    log.trace("конечная директория для поиска {}", dir);
+    if (dir != null && dir.exists()) {
+      File[] files = dir.listFiles();
+      if (files.length > 0) {
+        log.trace("внутри директории {} найдено {} файлов. будет извлечен файл {}", dir, files.length, files[0]);
+        return Optional.of(files[0]);
+      } else {
+        log.trace("внутри директории {} не найдено файлов", dir);
       }
-    } catch (IOException ex) {
-      log.trace("ошибка при поиске файла", ex);
+    } else {
+      log.trace("директории {} не существует", dir);
     }
     return Optional.empty();
   }
