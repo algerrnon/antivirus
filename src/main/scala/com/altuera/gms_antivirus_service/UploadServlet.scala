@@ -80,21 +80,29 @@ class UploadServlet extends HttpServlet {
 
   private def threadEmulation(manager: RequestReplyManager, originalFile: File) = {
     antivirus.upload(originalFile, List(ApiFeatures.THREAT_EMULATION))
+    log.trace("загрузили файл на THREAT_EMULATION")
     val emulation: Option[EmulationResultData] = antivirus.threadEmulationQueryRetry(originalFile)
+    log.trace(s"получили результ эмуляции $emulation")
     processResultEmulation(manager, originalFile, emulation, Configuration.messageIsSafeFile)
+    log.trace("обработали результат эмуляции")
   }
 
   private def processResultEmulation(manager: RequestReplyManager, originalFile: File, emulation: Option[EmulationResultData], message: String) = {
     val verdict = emulation.map(_.combined_verdict).getOrElse("")
+    log.trace(s"combined_verdict = $verdict")
     if (verdict.equalsIgnoreCase(VerdictValues.BENIGN)) {
-      //Если вердикт отрицательный (не вирус) – направляем в GMS оригинальный документ.
+      log.trace("вердикт через GMS отрицательный (не вирус) – направляем в GMS оригинальный документ")
       manager.sendCustomNoticeToChat(message)
+      log.trace(s"сообщение $message в чат отправлено")
       val genesysUploadResponse = manager.uploadFileToChat(originalFile)
+      log.trace(s"файл $originalFile в чат загружен")
       manager.copyGenesysResponseToServletResponse(genesysUploadResponse)
+      log.trace("скопирован Genesys API ответ в ответ отправляемый инициатору загрузки файла")
     } else if (verdict.equalsIgnoreCase(VerdictValues.MALICIOUS)) {
-      //Если вердикт положительный (вирус) – направляем кастомные сообщения получателю и отправителю.
+      log.trace("Если вердикт положительный (вирус) – направляем кастомные сообщения получателю и отправителю.")
       manager.sendCustomNoticeToChat(Configuration.messageIsInfectedFile)
     } else {
+      log.trace(s"эмуляция не вернула по какой-то причине результат verdict $verdict")
       //что-то пошло не так, например сервис возвращает VerdictValues.UNKNOWN
     }
   }
@@ -103,13 +111,19 @@ class UploadServlet extends HttpServlet {
     val extractionMethod = if (forConvertToPdf(fileType)) ExtractionMethod.PDF else ExtractionMethod.CLEAN
     antivirus.upload(originalFile, List(ApiFeatures.THREAT_EXTRACTION), extractionMethod)
     val threadExtraction = antivirus.threadExtractionQueryRetry(originalFile, extractionMethod)
+    if (threadExtraction.map(_.extract_result.equalsIgnoreCase(ExtractResultsStatuses.CP_EXTRACT_RESULT_SUCCESS))
+      .getOrElse(false)) {
+      val file: File = downloadFile(originalFile.getName, threadExtraction)
 
-    val file: File = downloadFile(originalFile.getName, threadExtraction)
+      log.trace("Полученный очищенный файл направляем получателю вместе cообщением, что доставлена безопасная копия.")
+      manager.sendCustomNoticeToChat(Configuration.messageIsSafeFile)
+      val genesysUploadResponse = manager.uploadFileToChat(file)
+      manager.copyGenesysResponseToServletResponse(genesysUploadResponse)
 
-    //Полученный очищенный файл направляем получателю через GMS вместе с кастомным сообщением, что доставлена безопасная копия.
-    manager.sendCustomNoticeToChat(Configuration.messageIsSafeFile)
-    val genesysUploadResponse = manager.uploadFileToChat(file)
-    manager.copyGenesysResponseToServletResponse(genesysUploadResponse)
+    }
+    else {
+      log.warn(s"ThreatPrevention API не смогло выполнить экстракцию. Ответ сервиса $threadExtraction")
+    }
 
   }
 
