@@ -68,8 +68,8 @@ class UploadServlet extends HttpServlet {
       } else {
         threadEmulation(manager, originalFile)
       }
-      //todo Оригиналы храним в Application несколько дней (нужно предусмотреть хранилище).
-      //manager.deleteFolderRecursively()
+      //todo удаляем файлы из uploadBaseDir по завершении работы JVM, файлы storageBaseDir в настоящий момент не удаляем
+      manager.deleteFolderRecursively()
     }
     catch {
       case NonFatal(ex) =>
@@ -100,7 +100,7 @@ class UploadServlet extends HttpServlet {
   }
 
   private def threadExtraction(manager: RequestReplyManager, originalFile: File, fileType: String) = {
-    val extractionMethod = if (forConvertToPdf(fileType)) "pdf" else "clean"
+    val extractionMethod = if (forConvertToPdf(fileType)) ExtractionMethod.PDF else ExtractionMethod.CLEAN
     antivirus.upload(originalFile, List(ApiFeatures.THREAT_EXTRACTION), extractionMethod)
     val threadExtraction = antivirus.threadExtractionQueryRetry(originalFile, extractionMethod)
 
@@ -132,6 +132,7 @@ class UploadServlet extends HttpServlet {
   }
 
   private def makeErrorResponse(message: String, response: HttpServletResponse) = {
+    log.trace("формируем сообщение об ошибке")
     response.setStatus(STATUS_CODE_FAILED)
     response.setContentType("application/json")
     response.getWriter.write(JsObject("result" -> JsString("error"), "message" -> JsString(message)).toString())
