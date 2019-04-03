@@ -1,3 +1,5 @@
+![44](http://alt-devdepot.altuera.local:3000/open-ru/gms-antivirus-service/raw/master/src/main/resources/img/antivirus-swimlanes.png)
+
 ## Описание проекта
 
 Сервис, принимающий запросы по адресу  
@@ -39,6 +41,7 @@ http://[host]:[port(default=8080)]/upload
 
 
 ### Сценарий обработки запроса на загрузку файла
+
 
 #### Получение всех необходимых данных из запроса на загрузку файла
 * __Клиент__ отправляет multipart запрос на загрузку файла в чат 
