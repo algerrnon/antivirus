@@ -30,8 +30,10 @@ class RequestReplyManager(request: HttpServletRequest,
 
   def sendCustomNoticeToChat(message: String): Unit = {
     val id = String.valueOf(UUID.randomUUID)
+    log.trace(s"id=$id")
     val cookieHeaderValue = data.requestHeaders
       .getOrElse("cookie", throw new SendCustomNoticeException("cookie header is empty"))
+    log.trace(s"заголовок cookie $cookieHeaderValue")
     val success = RequestReplyManager.genesysClient.sendCustomNotice(
       id,
       data.clientId,
@@ -40,7 +42,7 @@ class RequestReplyManager(request: HttpServletRequest,
       cookieHeaderValue)
 
     if (!success) {
-      val message = "No send custom notice"
+      val message = "не смогли успешно отправить сообщение в чат"
       log.warn(message)
       throw new SendCustomNoticeException(message)
     }
@@ -142,24 +144,32 @@ class RequestReplyManager(request: HttpServletRequest,
     val isMultipart = ServletFileUpload.isMultipartContent(request)
     if (!isMultipart) {
       val message = "No file uploaded, Current request is not a multipart request"
-      log.trace(message)
+      log.warn(message)
       throw new MultipartRequestValidationException(message)
+    } else {
+      log.trace("получен корректный multipart request")
     }
   }
 
   private def readFileDataFromRequestAndWriteToTempFile(item: FileItemStream): File = {
 
     val fieldName = item.getFieldName()
+    log.trace(s"получили имя поля содержащего файл из данных сервлета fieldName = $fieldName")
     val fileName = item.getName()
+    log.trace(s"получили имя файла fileName = $fileName")
     val stream = item.openStream()
+    log.trace("открыли входной поток")
     val contentType = item.getContentType
     log.trace("Content type: " + contentType)
     log.trace("Got an uploaded file: " + fieldName + ", name = " + fileName)
     log.trace("Try to write stream to file : \n->" + stream.available() + " octets \n")
     // creates the temp directory and temp file
     val tempFile: File = Utils.createNewTempDirAndTempFileInDir(RequestReplyManager.baseDirectoryForTemporaryDirs, fileName)
+    log.trace(s"создали временный файл $tempFile")
     FileUtils.copyInputStreamToFile(stream, tempFile)
+    log.trace(s"копировали входной поток в файл $tempFile")
     stream.close()
+    log.trace("закрыли входной поток")
     tempFile
   }
 
@@ -167,44 +177,57 @@ class RequestReplyManager(request: HttpServletRequest,
 
     def validFile(file: File): Try[File] = {
       if (file == null || !file.exists) {
+        log.trace("загружаемый для проверки файл отсутствует")
         Failure(new ValidateServletRequestDataException("uploaded file is null or not exist"))
       }
       else {
+        log.trace("загружаемый для проверки файл в наличии")
         Success(file)
       }
     }
 
     def validSecureKey(secureKey: String): Try[String] = {
       if (secureKey == null || secureKey.isEmpty) {
+        log.trace("secure key отсутствует")
         Failure(new ValidateServletRequestDataException("secure key is null or empty"))
       }
       else {
+        log.trace("secure key в наличии")
         Success(secureKey)
       }
     }
 
     def validClientId(clientId: String): Try[String] = {
       if (clientId == null || clientId.isEmpty) {
+        log.trace("clientId отсутствует")
         Failure(new ValidateServletRequestDataException("clientId is null or empty"))
       }
       else {
+        log.trace("clientId в наличии")
         Success(clientId)
       }
     }
 
     def validRequestHeaders(requestHeaders: mutable.Map[String, String]): Try[mutable.Map[String, String]] = {
       if (requestHeaders == null || requestHeaders.isEmpty) {
+        log.trace("нет данных о заголовках запроса")
         Failure(new ValidateServletRequestDataException("requestHeaders is null or empty"))
       }
       if (requestHeaders.contains("cookie")) {
         val cookie = requestHeaders.get("cookie")
         if (cookie == null || cookie.isEmpty) {
+          log.trace("не определен заголовок cookie")
           Failure(new ValidateServletRequestDataException("cookie header is null or empty"))
+        }
+        else {
+          log.trace(s"заголовок cookie определен и содержит значение $cookie")
         }
       }
       else {
+        log.trace("заголовок cookie отсутствует")
         Failure(new ValidateServletRequestDataException("cookie header is not exist"))
       }
+      log.trace("все обязательные заголовки запроса определены")
       Success(requestHeaders)
     }
 
