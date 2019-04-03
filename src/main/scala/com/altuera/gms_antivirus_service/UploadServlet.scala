@@ -6,6 +6,7 @@ import java.io.File
 import com.altuera.gms_antivirus_service.av._
 import javax.servlet.annotation.{MultipartConfig, WebServlet}
 import javax.servlet.http.{HttpServlet, HttpServletRequest, HttpServletResponse}
+import org.apache.commons.lang3.exception.ExceptionUtils
 import org.slf4j.LoggerFactory
 import spray.json.{JsObject, JsString}
 
@@ -74,7 +75,7 @@ class UploadServlet extends HttpServlet {
     catch {
       case NonFatal(ex) =>
         log.error("error", ex)
-        makeErrorResponse(ex.getLocalizedMessage, servletResponse)
+        makeErrorResponse(ExceptionUtils.getStackTrace(ex), servletResponse)
     }
   }
 

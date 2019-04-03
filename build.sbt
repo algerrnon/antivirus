@@ -21,7 +21,8 @@ libraryDependencies ++= Seq(
   "commons-fileupload" % "commons-fileupload" % "1.3.3",
   "commons-io" % "commons-io" % "2.2",
   "com.softwaremill.sttp" %% "core" % "1.5.11",
-  "com.softwaremill.retry" %% "retry" % "0.3.2"
+  "com.softwaremill.retry" %% "retry" % "0.3.2",
+  "org.apache.commons" % "commons-lang3" % "3.8.1"
 )
 
 //если хотите версию томката которая не совпадает с версией по умолчанию
