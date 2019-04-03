@@ -30,12 +30,14 @@ class GenesysApiClient(url: String) {
          |  "id": "$id",
          |  "clientId": "$clientId"
          |}""".stripMargin
-    val response = sttp
+
+    val request = sttp
       .post(sendCustomNoticeUri)
       .contentType("application/json;charset=utf-8")
       .body(requestBody)
       .header("cookie", cookieHeaderValue)
-      .send()
+    log.trace(s"отправляем запрос на отправку сообщения в чат sendCustomNotice Genesys Chat API $request")
+    val response = request.send()
 
     response.body match {
       case Left(obj) => {
@@ -47,15 +49,20 @@ class GenesysApiClient(url: String) {
         //example response body:  [{"channel":"/service/chatV2/request-chat-v2","id":"123abc","error":"402::Unknown client","successful":false}]
         val headOption = obj.parseJson.convertTo[Seq[CustomNoticeResponse]].headOption
         headOption match {
-          case Some(value) => value.successful
-          case None => false
+          case Some(value) => {
+            log.trace("запрос выполнен успешно")
+            value.successful
+          }
+          case None => {
+            log.trace("сообщение не было отправлено")
+            false
+          }
         }
       }
     }
   }
 
   def uploadFileToChat(file: File, secureKey: String, cookieHeaderValue: String): com.softwaremill.sttp.Response[String] = {
-
     val result = sttp.multipartBody(
       multipart("operation", "fileUpload").contentType("multipart/form-data"),
       multipart("secureKey", secureKey).contentType("multipart/form-data"),
@@ -64,6 +71,7 @@ class GenesysApiClient(url: String) {
       .post(uploadFileToChatUri)
       .header("cookie", cookieHeaderValue)
       .send()
+    log.trace(s"отправили запрос на отпраку файла в чат Genesys Chat API, result = $result")
     result
   }
 }

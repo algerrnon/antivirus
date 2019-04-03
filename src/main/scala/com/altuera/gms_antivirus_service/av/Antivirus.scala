@@ -77,6 +77,7 @@ class Antivirus {
     ).post(UPLOAD_URL).header("Authorization", API_KEY)
 
     log.trace(s"отправляем запрос на upload в Thread Prevention API $request")
+    log.trace(jsonPart.prettyPrint)
     val response = request.send()
 
 
@@ -164,8 +165,10 @@ class Antivirus {
 
     Try(Await.result(doRetry(), Duration(MAXIMUM_WAIT_TIME_SECONDS, TimeUnit.SECONDS))) match {
       case scala.util.Success(fx) => if (fx.isDefined) {
+        log.trace("успех")
         Some(fx.get._2)
       } else {
+        log.trace("неудача")
         None
       }
       case _ => None
@@ -202,6 +205,7 @@ class Antivirus {
       .contentType("application/json")
       .header("Authorization", API_KEY)
     log.trace(s"отправляем запрос на thread extraction в Thread Prevention API $request")
+    log.trace(jsonPart.prettyPrint)
     val response = request.send()
 
     response.body match {
@@ -286,6 +290,7 @@ class Antivirus {
       .contentType("application/json")
       .header("Authorization", API_KEY)
     log.trace(s"отправляем запрос на thread emulation в Thread Prevention API $request")
+    log.trace(jsonPart.prettyPrint)
     val response = request.send()
 
     response.body match {
@@ -294,7 +299,7 @@ class Antivirus {
         None
       }
       case Right(obj) => {
-        log.info(response.unsafeBody)
+        log.trace(response.unsafeBody)
         val jsResponse = response.unsafeBody.parseJson.asJsObject.fields("response").asJsObject
         val isCorrect = jsResponse.fields("status").asJsObject.fields("code").convertTo[Int] == (ApiCodes.FOUND)
         if (isCorrect) {
