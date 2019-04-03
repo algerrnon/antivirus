@@ -66,7 +66,7 @@ class UploadServlet extends HttpServlet {
       if (forThreadExtraction(fileExtension)) {
         threadExtraction(manager, originalFile, fileExtension)
       } else {
-        threadEmulation(manager, originalFile)
+        threadEmulation(manager, originalFile, servletResponse)
       }
       //todo удаляем файлы из uploadBaseDir по завершении работы JVM, файлы storageBaseDir в настоящий момент не удаляем
       manager.deleteFolderRecursively()
@@ -78,16 +78,16 @@ class UploadServlet extends HttpServlet {
     }
   }
 
-  private def threadEmulation(manager: RequestReplyManager, originalFile: File) = {
+  private def threadEmulation(manager: RequestReplyManager, originalFile: File, httpServletResponse: HttpServletResponse) = {
     antivirus.upload(originalFile, List(ApiFeatures.THREAT_EMULATION))
     log.trace("загрузили файл на THREAT_EMULATION")
     val emulation: Option[EmulationResultData] = antivirus.threadEmulationQueryRetry(originalFile)
     log.trace(s"получили результ эмуляции $emulation")
-    processResultEmulation(manager, originalFile, emulation, Configuration.messageIsSafeFile)
+    processResultEmulation(manager, originalFile, emulation, Configuration.messageIsSafeFile, httpServletResponse)
     log.trace("обработали результат эмуляции")
   }
 
-  private def processResultEmulation(manager: RequestReplyManager, originalFile: File, emulation: Option[EmulationResultData], message: String) = {
+  private def processResultEmulation(manager: RequestReplyManager, originalFile: File, emulation: Option[EmulationResultData], message: String, httpServletResponse: HttpServletResponse) = {
     val verdict = emulation.map(_.combined_verdict).getOrElse("")
     log.trace(s"combined_verdict = $verdict")
     if (verdict.equalsIgnoreCase(VerdictValues.BENIGN)) {
@@ -101,6 +101,7 @@ class UploadServlet extends HttpServlet {
     } else if (verdict.equalsIgnoreCase(VerdictValues.MALICIOUS)) {
       log.trace("Если вердикт положительный (вирус) – направляем кастомные сообщения получателю и отправителю.")
       manager.sendCustomNoticeToChat(Configuration.messageIsInfectedFile)
+      makeErrorResponse(Configuration.messageIsInfectedFile, httpServletResponse)
     } else {
       log.trace(s"эмуляция не вернула по какой-то причине результат verdict $verdict")
       //что-то пошло не так, например сервис возвращает VerdictValues.UNKNOWN
