@@ -123,7 +123,7 @@ class UploadServlet extends HttpServlet {
 
     }
     else {
-      log.warn(s"ThreatPrevention API не смогло выполнить экстракцию. Ответ сервиса $threadExtraction")
+      log.warn(s"ThreatPrevention API не смог выполнить экстракцию. Ответ сервиса $threadExtraction")
     }
 
   }

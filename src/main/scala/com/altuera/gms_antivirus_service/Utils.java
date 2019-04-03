@@ -36,7 +36,7 @@ public class Utils {
     if (headerNames != null) {
       headers = Collections.list(headerNames)
         .stream()
-        .collect(Collectors.toMap(h -> h, request::getHeader));
+        .collect(Collectors.toMap(h -> h.toLowerCase(), request::getHeader));
     }
 
     log.trace("получили заголовки {}", headers.entrySet().stream().map(entry -> String.join(":", entry.getKey(), entry.getValue())).collect(Collectors.joining("|")));
