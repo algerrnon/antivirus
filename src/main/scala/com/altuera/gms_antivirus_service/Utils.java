@@ -32,14 +32,14 @@ public class Utils {
    */
   public static Map<String, String> getRequestHeaders(HttpServletRequest request) {
     Enumeration<String> headerNames = request.getHeaderNames();
-    log.trace("получили имена заголовков");
     Map<String, String> headers = new HashMap<>();
     if (headerNames != null) {
       headers = Collections.list(headerNames)
         .stream()
         .collect(Collectors.toMap(h -> h, request::getHeader));
     }
-    log.trace("получили map заголовков" + String.valueOf(headerNames));
+
+    log.trace("получили заголовки {}", headers.entrySet().stream().map(entry -> String.join(":", entry.getKey(), entry.getValue())).collect(Collectors.joining("|")));
     return headers;
   }
 
@@ -75,13 +75,13 @@ public class Utils {
   private static File createTempDirectoryInsideBaseDir(File baseDir) throws CreateTempDirAndTempFileException {
 
     String baseName = System.currentTimeMillis() + "-";
-    log.trace("базовое имя временной директории {}", baseName);
+    //log.trace("базовое имя временной директории {}", baseName);
 
     for (int counter = 0; counter < TEMP_DIR_ATTEMPTS; counter++) {
       File tempDir = new File(baseDir, baseName + counter);
       if (tempDir.mkdir()) {
-        log.trace("окончательное имя временной директории {}", tempDir);
-        log.trace("число попыток подбора уникального имени {}", counter);
+        //log.trace("окончательное имя временной директории {}", tempDir);
+        //log.trace("число попыток подбора уникального имени {}", counter + 1);
         return tempDir;
       }
     }
@@ -131,7 +131,7 @@ public class Utils {
       return "";
     } else {
       String fileExtension = fileName.substring(lastIndex + 1);
-      log.trace("получили расширение {} для имени файла {} ", fileExtension, fileName);
+      //log.trace("получили расширение {} для имени файла {} ", fileExtension, fileName);
       return fileExtension;
     }
   }

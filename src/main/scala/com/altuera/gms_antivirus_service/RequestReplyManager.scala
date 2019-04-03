@@ -101,7 +101,7 @@ class RequestReplyManager(request: HttpServletRequest,
 
         if (item.isFormField()) {
           val fieldName = item.getFieldName()
-          log.trace("Got a form field: " + fieldName)
+          log.trace("Получили form field: " + fieldName)
           fieldName match {
             case "secureKey" => {
               secureKey = getFieldValue(item)
@@ -130,6 +130,7 @@ class RequestReplyManager(request: HttpServletRequest,
       case ex: FileUploadException =>
         log.error("Failed to upload file", ex)
         throw new GetDataFromServletRequestException("FileUploadException, Failed to upload file")
+
     }
   }
 
@@ -161,11 +162,9 @@ class RequestReplyManager(request: HttpServletRequest,
     log.trace("открыли входной поток")
     val contentType = item.getContentType
     log.trace("Content type: " + contentType)
-    log.trace("Got an uploaded file: " + fieldName + ", name = " + fileName)
-    log.trace("Try to write stream to file : \n->" + stream.available() + " octets \n")
+    log.trace(s"доступное содержимое потока для записи в файл -> ${stream.available()} octets")
     // creates the temp directory and temp file
     val tempFile: File = Utils.createNewTempDirAndTempFileInDir(RequestReplyManager.baseDirectoryForTemporaryDirs, fileName)
-    log.trace(s"создали временный файл $tempFile")
     FileUtils.copyInputStreamToFile(stream, tempFile)
     log.trace(s"копировали входной поток в файл $tempFile")
     stream.close()

@@ -70,21 +70,24 @@ class Antivirus {
       )
     )
 
-    val response = sttp.multipartBody(
+
+    val request = sttp.multipartBody(
       multipart("request", jsonPart.toString).contentType("application/json"),
       multipartFile("file", file).fileName(fileName).contentType("multipart/form-data")
-    )
-      .post(UPLOAD_URL)
-      .header("Authorization", API_KEY)
-      .send()
+    ).post(UPLOAD_URL).header("Authorization", API_KEY)
+
+    log.trace(s"отправляем запрос на upload в Thread Prevention API $request")
+    val response = request.send()
+
 
     response.body match {
       case Left(obj) => {
         log.warn(s"code=${response.code}; statusText=${response.statusText}")
+        log.trace(response.unsafeBody)
         false
       }
       case Right(obj) => {
-        log.info(response.unsafeBody)
+        log.trace(response.unsafeBody)
         val apiCode = response.unsafeBody.parseJson.asJsObject.
           fields("response").asJsObject.
           fields("status").asJsObject.
@@ -93,17 +96,6 @@ class Antivirus {
         apiCode == av.ApiCodes.FOUND || apiCode == ApiCodes.UPLOAD_SUCCESS
       }
     }
-  }
-
-  def getMd5(file: File): String = {
-    val md = MessageDigest.getInstance(HashTypes.MD5)
-    val dis = new DigestInputStream(Files.newInputStream(file.toPath), md)
-    // fully consume the inputstream
-    while (dis.available > 0) {
-      dis.read
-    }
-    dis.close
-    md.digest.map(b => String.format("%02x", Byte.box(b))).mkString
   }
 
   /**
@@ -140,12 +132,14 @@ class Antivirus {
     */
   def download(id: String, fileName: String): Option[File] = {
     val file = Utils.createNewTempDirAndTempFileInDir(baseDirectoryForTemporaryDirs, fileName)
-    val response = sttp
+    val request = sttp
       .get(DOWNLOAD_PATH.params("id" -> id))
       .header("Authorization", API_KEY)
       .header("Cache-Control", "no-cache")
       .response(asFile(file = file, overwrite = true))
-      .send()
+    log.trace(s"отправляем запрос на download в Thread Prevention API $request")
+    val response = request.send()
+    log.trace(s"получен файл $file")
     Some(file)
   }
 
@@ -163,7 +157,7 @@ class Antivirus {
         max = MAX_NUMBER_OF_TIMES) //количество попыток (на единицу больше чем max)
 
         .apply(() => Future {
-        log.trace("retry")
+        log.trace("выполняем повторный запрос thread extraction")
         threadExtractionQuery(file, extractionMethod)
       })
     }
@@ -202,12 +196,13 @@ class Antivirus {
       )
     )
 
-    val response = sttp
+    val request = sttp
       .body(jsonPart.toString)
       .post(QUERY_URL)
       .contentType("application/json")
       .header("Authorization", API_KEY)
-      .send()
+    log.trace(s"отправляем запрос на thread extraction в Thread Prevention API $request")
+    val response = request.send()
 
     response.body match {
       case Left(obj) => {
@@ -229,6 +224,17 @@ class Antivirus {
     }
   }
 
+  def getMd5(file: File): String = {
+    val md = MessageDigest.getInstance(HashTypes.MD5)
+    val dis = new DigestInputStream(Files.newInputStream(file.toPath), md)
+    // fully consume the inputstream
+    while (dis.available > 0) {
+      dis.read
+    }
+    dis.close
+    md.digest.map(b => String.format("%02x", Byte.box(b))).mkString
+  }
+
   def threadEmulationQueryRetry(file: File): Option[EmulationResultData] = {
     implicit val isDefined = retry.Success[Option[(Boolean, EmulationResultData)]](x => x != null && x.isDefined && x.get._1)
 
@@ -238,9 +244,9 @@ class Antivirus {
         max = MAX_NUMBER_OF_TIMES)
 
         .apply(() => Future {
-        log.trace("retry")
-        threadEmulationQuery(file)
-      })
+          log.trace("выполняем повторный запрос thread emulation")
+          threadEmulationQuery(file)
+        })
     }
 
     Try(Await.result(doRetry(), Duration(MAXIMUM_WAIT_TIME_SECONDS, TimeUnit.SECONDS))) match {
@@ -274,13 +280,13 @@ class Antivirus {
       )
     )
 
-    val response = sttp
+    val request = sttp
       .body(jsonPart.toString)
       .post(QUERY_URL)
       .contentType("application/json")
       .header("Authorization", API_KEY)
-      .send()
-
+    log.trace(s"отправляем запрос на thread emulation в Thread Prevention API $request")
+    val response = request.send()
 
     response.body match {
       case Left(obj) => {
