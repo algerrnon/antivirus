@@ -41,21 +41,22 @@ http://[host]:[port(default=8080)]/[имя war-файла проекта без 
 В дальнейшем в описании мы будем использовать такие названия для участников взаимодействия (в тексте они будут начинаться с заглавной буквы и будут __выделены__):
 
 * __HTTP-клиент__ - программа отправляющая запросы на загрузку файлов
-* __Сервис__ - сервис принимающих запросы на загрузкуй файлов и обрабатывающий эту загрузку (текущий проект)
+* __Сервис__ - сервис принимающих запросы на загрузку файлов и обрабатывающий эту загрузку (текущий проект)
 * __Chat API__ - Genesys API для взаимодействия с чатами: загрузки сообщений, файлов в чат и т.д.
 * __Пользователь__ - пользователь чата, получающий сообщения в чате, скачивающий из файлы
 * __Thread Prevention API__ - API для предотвращения угроз, способное выполнять проверку и очистку/конвертацию файлов в безопасные форматы
 
  
+ 
 ------------------
 
-Используемые API:
- 
-* Проверка файлов на начилие угроз происходит при помощи Thread Prevention API - Thread Emulation.
-* Конвертация файлов в безопасный формат (PDF) обеспечивается при помощи Thread Prevention API - Thread Extraction 
-* Удаление из файлов опасных участков обеспечивается Thread Prevention API - Thread Extraction, method clean
-* Взаимодействие с чатами выполняется через [Genesys Chat API Version 2 with CometD](https://docs.genesys.com/Documentation/GMS/8.5.2/API/ChatAPIv2CometD)
-
+### Используемые API:
+|Название|Назначение|Ссылка на документацию|Версия|
+|---|---|---|---|
+|Thread Prevention API|Конвертация файлов в безопасный формат (PDF) обеспечивается при помощи Thread Prevention API - Thread Extraction, method pdf|[THREAT PREVENTION API 1.0 Reference Guide](http://supportcontent.checkpoint.com/documentation_download?ID=56765)|1.0|
+| |Удаление из файлов опасных участков обеспечивается Thread Prevention API - Thread Extraction, method clean|[THREAT PREVENTION API 1.0 Reference Guide](http://supportcontent.checkpoint.com/documentation_download?ID=56765)|1.0|
+| |Проверка файлов на начилие угроз происходит при помощи Thread Prevention API - Thread Emulation|[THREAT PREVENTION API 1.0 Reference Guide](http://supportcontent.checkpoint.com/documentation_download?ID=56765)|1.0|
+|Genesys Chat API Version 2 with CometD|Взаимодействие с чатами Genesys, отправка сообщений, отправка файлов в чат|[Genesys Chat API Version 2 with CometD](https://docs.genesys.com/Documentation/GMS/8.5.2/API/ChatAPIv2CometD)|8.5.2|
 
 ### Сценарий обработки запроса на загрузку файла
 
