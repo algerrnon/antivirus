@@ -36,7 +36,7 @@ class GenesysApiClient(url: String) {
       .contentType("application/json;charset=utf-8")
       .body(requestBody)
       .header("cookie", cookieHeaderValue)
-    log.trace(s"отправляем запрос на отправку сообщения в чат sendCustomNotice Genesys Chat API $request")
+    log.trace(s"send CustomNotice (Genesys Chat API) $request")
     val response = request.send()
 
     response.body match {
@@ -50,11 +50,11 @@ class GenesysApiClient(url: String) {
         val headOption = obj.parseJson.convertTo[Seq[CustomNoticeResponse]].headOption
         headOption match {
           case Some(value) => {
-            log.trace("запрос выполнен успешно")
+            log.trace("success")
             value.successful
           }
           case None => {
-            log.trace("сообщение не было отправлено")
+            log.trace("fail")
             false
           }
         }
@@ -71,7 +71,7 @@ class GenesysApiClient(url: String) {
       .post(uploadFileToChatUri)
       .header("cookie", cookieHeaderValue)
       .send()
-    log.trace(s"отправили запрос на отпраку файла в чат Genesys Chat API, result = $result")
+    log.trace(s"send file to chat (Genesys Chat API), result = $result")
     result
   }
 }
