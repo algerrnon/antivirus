@@ -1,6 +1,7 @@
 organization := "com.altuera.open_ru"
 name := "gms_antivirus_service"
 version := "0.0.4"
+webappWebInfClasses := true
 
 scalaVersion := "2.12.8"
 
@@ -28,5 +29,6 @@ libraryDependencies ++= Seq(
 //containerLibs in Tomcat := Seq("com.github.jsimone" % "webapp-runner" % "8.5.35" intransitive())
 
 enablePlugins(JettyPlugin, TomcatPlugin)
+
 
 fork in run := true
