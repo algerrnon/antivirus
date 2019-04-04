@@ -1,6 +1,6 @@
 organization := "com.altuera.open_ru"
 name := "gms_antivirus_service"
-version := "0.0.4"
+version := "0.0.5"
 webappWebInfClasses := true
 
 scalaVersion := "2.12.8"
