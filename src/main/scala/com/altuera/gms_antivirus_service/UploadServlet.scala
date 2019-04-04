@@ -4,6 +4,7 @@ package com.altuera.gms_antivirus_service
 import java.io.File
 
 import com.altuera.gms_antivirus_service.av._
+import javax.servlet.ServletConfig
 import javax.servlet.annotation.{MultipartConfig, WebServlet}
 import javax.servlet.http.{HttpServlet, HttpServletRequest, HttpServletResponse}
 import org.slf4j.LoggerFactory
@@ -49,6 +50,10 @@ class UploadServlet extends HttpServlet {
   val STATUS_CODE_OK = 200
   val antivirus = new Antivirus()
   private val log = LoggerFactory.getLogger(this.getClass)
+
+  override def init(config: ServletConfig) = {
+    log.info("============ GMS Antivirus Service начал работу ============")
+  }
 
   @MultipartConfig(
     fileSizeThreshold = 10485760, //1024 * 1024 * 10, //10 MB
@@ -148,11 +153,16 @@ class UploadServlet extends HttpServlet {
 
   private def makeErrorResponse(message: String, response: HttpServletResponse) = {
     log.trace("формируем сообщение об ошибке")
+    response.setCharacterEncoding("UTF-8")
+    response.setContentType("application/json; charset=utf-8")
     response.setStatus(STATUS_CODE_FAILED)
     response.setContentType("application/json")
     response.getWriter.write(JsObject("result" -> JsString("error"), "message" -> JsString(message)).toString())
   }
 
+  override def destroy() = {
+    log.info("============ GMS Antivirus Service завершил работу ============")
+  }
 }
 
 
