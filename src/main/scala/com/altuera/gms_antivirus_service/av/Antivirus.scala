@@ -76,7 +76,7 @@ class Antivirus {
       multipartFile("file", file).fileName(fileName).contentType("multipart/form-data")
     ).post(UPLOAD_URL).header("Authorization", API_KEY)
 
-    log.trace(s"отправляем запрос на upload в Thread Prevention API $request")
+    log.trace(s"upload Thread Prevention API $request")
     log.trace(jsonPart.prettyPrint)
     val response = request.send()
 
@@ -138,9 +138,9 @@ class Antivirus {
       .header("Authorization", API_KEY)
       .header("Cache-Control", "no-cache")
       .response(asFile(file = file, overwrite = true))
-    log.trace(s"отправляем запрос на download в Thread Prevention API $request")
+    log.trace(s"download request (Thread Prevention API) = $request")
     val response = request.send()
-    log.trace(s"получен файл $file")
+    log.trace(s"got file = $file")
     Some(file)
   }
 
@@ -158,17 +158,17 @@ class Antivirus {
         max = MAX_NUMBER_OF_TIMES) //количество попыток (на единицу больше чем max)
 
         .apply(() => Future {
-        log.trace("выполняем повторный запрос thread extraction")
+        log.trace("retry thread extraction")
         threadExtractionQuery(file, extractionMethod)
       })
     }
 
     Try(Await.result(doRetry(), Duration(MAXIMUM_WAIT_TIME_SECONDS, TimeUnit.SECONDS))) match {
       case scala.util.Success(fx) => if (fx.isDefined) {
-        log.trace("успех")
+        log.trace("success")
         Some(fx.get._2)
       } else {
-        log.trace("неудача")
+        log.trace("fail")
         None
       }
       case _ => None
@@ -204,7 +204,7 @@ class Antivirus {
       .post(QUERY_URL)
       .contentType("application/json")
       .header("Authorization", API_KEY)
-    log.trace(s"отправляем запрос на thread extraction в Thread Prevention API $request")
+    log.trace(s"thread extraction request (Thread Prevention API) = $request")
     log.trace(jsonPart.prettyPrint)
     val response = request.send()
 
@@ -248,7 +248,7 @@ class Antivirus {
         max = MAX_NUMBER_OF_TIMES)
 
         .apply(() => Future {
-          log.trace("выполняем повторный запрос thread emulation")
+          log.trace("retry thread emulation request")
           threadEmulationQuery(file)
         })
     }
@@ -289,7 +289,7 @@ class Antivirus {
       .post(QUERY_URL)
       .contentType("application/json")
       .header("Authorization", API_KEY)
-    log.trace(s"отправляем запрос на thread emulation в Thread Prevention API $request")
+    log.trace(s"thread emulation request (Thread Prevention API) = $request")
     log.trace(jsonPart.prettyPrint)
     val response = request.send()
 
