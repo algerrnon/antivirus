@@ -52,7 +52,7 @@ class UploadServlet extends HttpServlet {
   private val log = LoggerFactory.getLogger(this.getClass)
 
   override def init(config: ServletConfig) = {
-    log.info("============ GMS Antivirus Service начал работу ============")
+    log.info("============ GMS Antivirus Service status = STARTED ============")
   }
 
   @MultipartConfig(
@@ -85,30 +85,30 @@ class UploadServlet extends HttpServlet {
 
   private def threadEmulation(manager: RequestReplyManager, originalFile: File, httpServletResponse: HttpServletResponse) = {
     antivirus.upload(originalFile, List(ApiFeatures.THREAT_EMULATION))
-    log.trace("загрузили файл на THREAT_EMULATION")
+    log.trace("uploaded file to THREAT_EMULATION")
     val emulation: Option[EmulationResultData] = antivirus.threadEmulationQueryRetry(originalFile)
-    log.trace(s"получили результ эмуляции $emulation")
+    log.trace(s"got emulation results $emulation")
     processResultEmulation(manager, originalFile, emulation, Configuration.messageIsSafeFile, httpServletResponse)
-    log.trace("обработали результат эмуляции")
+    log.trace("processed emulation result")
   }
 
   private def processResultEmulation(manager: RequestReplyManager, originalFile: File, emulation: Option[EmulationResultData], message: String, httpServletResponse: HttpServletResponse) = {
     val verdict = emulation.map(_.combined_verdict).getOrElse("")
     log.trace(s"combined_verdict = $verdict")
     if (verdict.equalsIgnoreCase(VerdictValues.BENIGN)) {
-      log.trace("вердикт через GMS отрицательный (не вирус) – направляем в GMS оригинальный документ")
+      log.trace("negative verdict (not a virus) - send the original document to the GMS")
       manager.sendCustomNoticeToChat(message)
-      log.trace(s"сообщение $message в чат отправлено")
+      log.trace(s"message $message sent to chat")
       val genesysUploadResponse = manager.uploadFileToChat(originalFile)
-      log.trace(s"файл $originalFile в чат загружен")
+      log.trace(s"file $originalFile loaded into chat")
       manager.copyGenesysResponseToServletResponse(genesysUploadResponse)
-      log.trace("скопирован Genesys API ответ в ответ отправляемый инициатору загрузки файла")
+      log.trace("Copied Genesys API response to the response sent to the initiator of the file download")
     } else if (verdict.equalsIgnoreCase(VerdictValues.MALICIOUS)) {
-      log.trace("Если вердикт положительный (вирус) – направляем кастомные сообщения получателю и отправителю.")
+      log.trace("If the verdict is positive (virus), we send custom messages to the recipient and the sender.")
       manager.sendCustomNoticeToChat(Configuration.messageIsInfectedFile)
       makeErrorResponse(Configuration.messageIsInfectedFile, httpServletResponse)
     } else {
-      log.trace(s"эмуляция не вернула по какой-то причине результат verdict $verdict")
+      log.trace(s"emulation did not return the result Verdict = $verdict")
       //что-то пошло не так, например сервис возвращает VerdictValues.UNKNOWN
     }
   }
@@ -121,14 +121,14 @@ class UploadServlet extends HttpServlet {
       .getOrElse(false)) {
       val file: File = downloadFile(originalFile.getName, threadExtraction)
 
-      log.trace("Полученный очищенный файл направляем получателю вместе cообщением, что доставлена безопасная копия.")
+      log.trace("The received cleared file is sent to the recipient with the message that a secure copy is delivered.")
       manager.sendCustomNoticeToChat(Configuration.messageIsSafeFile)
       val genesysUploadResponse = manager.uploadFileToChat(file)
       manager.copyGenesysResponseToServletResponse(genesysUploadResponse)
 
     }
     else {
-      log.warn(s"ThreatPrevention API не смог выполнить экстракцию. Ответ сервиса $threadExtraction")
+      log.warn(s"ThreatPrevention API could not perform extraction. Response $threadExtraction")
     }
 
   }
@@ -152,7 +152,7 @@ class UploadServlet extends HttpServlet {
   }
 
   private def makeErrorResponse(message: String, response: HttpServletResponse) = {
-    log.trace("формируем сообщение об ошибке")
+    log.trace("error message")
     response.setCharacterEncoding("UTF-8")
     response.setContentType("application/json; charset=utf-8")
     response.setStatus(STATUS_CODE_FAILED)
@@ -161,7 +161,7 @@ class UploadServlet extends HttpServlet {
   }
 
   override def destroy() = {
-    log.info("============ GMS Antivirus Service завершил работу ============")
+    log.info("============ GMS Antivirus Service status = STOPPED ============")
   }
 }
 
