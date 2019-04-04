@@ -39,7 +39,7 @@ public class Utils {
         .collect(Collectors.toMap(h -> h.toLowerCase(), request::getHeader));
     }
 
-    log.trace("получили заголовки {}", headers.entrySet().stream().map(entry -> String.join(":", entry.getKey(), entry.getValue())).collect(Collectors.joining("|")));
+    log.trace("received {} headers", headers.entrySet().stream().map(entry -> String.join(":", entry.getKey(), entry.getValue())).collect(Collectors.joining("|")));
     return headers;
   }
 
@@ -53,15 +53,15 @@ public class Utils {
    */
   public static File createNewTempDirAndTempFileInDir(File baseDir, String fileName) throws CreateTempDirAndTempFileException {
     File tempDirectory = createTempDirectoryInsideBaseDir(baseDir);
-    log.trace("создали временную директорию {} внутри базовой директории {}",
+    log.trace("created a temporary directory {} inside the base directory {}",
       tempDirectory, baseDir);
     if (tempDirectory != null) {
       File tempFile = new File(tempDirectory.getAbsolutePath() + File.separator + fileName);
-      log.trace("создали временный файл {} внутри временной директории ", tempFile);
+      log.trace("created a temporary file {} inside the temporary directory", tempFile);
       return tempFile;
     }
 
-    log.error("ошибка создания файла или директории. Базовая директория {} имя файла {}",
+    log.error("Error creating file or directory. Base directory {} file name {}",
       baseDir, fileName);
     throw new CreateTempDirAndTempFileException("Could not create temporary file or directory", null);
   }
@@ -85,7 +85,7 @@ public class Utils {
         return tempDir;
       }
     }
-    log.error("не удалось создать директорию с базовыми именем {} Количество выполненных попыток {}",
+    log.error("unable to create directory with base name {} Number of retries {}",
       baseName, TEMP_DIR_ATTEMPTS - 1);
     throw new CreateTempDirAndTempFileException("Failed to create directory ", null);
   }
@@ -110,7 +110,7 @@ public class Utils {
    * @param directory
    */
   public static void deleteFolderRecursively(File directory) {
-    log.trace("удаляем директорию {}", directory);
+    log.trace("delete directory {}", directory);
     if (directory != null && directory.exists() && directory.isDirectory()) {
       File[] files = directory.listFiles();
       for (File file : files) {
@@ -127,7 +127,7 @@ public class Utils {
   public static String extractFileExt(String fileName) {
     int lastIndex = fileName.lastIndexOf(".");
     if (lastIndex == -1) {
-      log.trace("файл с именем {} не имеет расширения", fileName);
+      log.trace("file named {} does not have an extension", fileName);
       return "";
     } else {
       String fileExtension = fileName.substring(lastIndex + 1);
@@ -150,17 +150,17 @@ public class Utils {
       targetFile = createNewTempDirAndTempFileInDir(baseDirectoryForTemporaryDir, sourceFile.getName());
       Files.copy(Paths.get(sourceFile.getPath()), Paths.get(targetFile.getPath()), StandardCopyOption.REPLACE_EXISTING);
     } catch (CreateTempDirAndTempFileException ex) {
-      log.error("ошибка создания временной директории", ex);
+      log.error("error, creating temporary directory", ex);
       throw ex;
     } catch (IOException ex) {
-      log.error("ошибка копирования файла", ex);
+      log.error("file copy error", ex);
       throw ex;
     }
     if (targetFile != null) {
       return targetFile;
     } else {
-      log.error("не удалось создать файл {}", targetFile.getPath());
-      throw new IllegalStateException("не удалось создать файл");
+      log.error("failed to create file {}", targetFile.getPath());
+      throw new IllegalStateException("failed to create file");
     }
   }
 
@@ -176,20 +176,20 @@ public class Utils {
    * @return файл наденный внутри tempDirName
    */
   public static Optional<File> getFileByBaseDirAndSeparateTempDirName(File baseDirectoryForTemporaryDir, String tempDirName) {
-    log.trace("выполняем поиск файла внутри временной директории {} расположенной в {}",
+    log.trace("perform a file search inside the {} temporary directory located in {}",
       tempDirName, baseDirectoryForTemporaryDir);
     File dir = Paths.get(baseDirectoryForTemporaryDir.getAbsolutePath() + File.separator + tempDirName).toFile();
-    log.trace("конечная директория для поиска {}", dir);
+    log.trace("destination directory for search {}", dir);
     if (dir != null && dir.exists()) {
       File[] files = dir.listFiles();
       if (files.length > 0) {
-        log.trace("внутри директории {} найдено {} файлов. будет извлечен файл {}", dir, files.length, files[0]);
+        log.trace("found {} files. file {} will be extracted", files.length, files[0]);
         return Optional.of(files[0]);
       } else {
-        log.trace("внутри директории {} не найдено файлов", dir);
+        log.trace("no files found in directory {}", dir);
       }
     } else {
-      log.trace("директории {} не существует", dir);
+      log.trace("directory {} does not exist", dir);
     }
     return Optional.empty();
   }
