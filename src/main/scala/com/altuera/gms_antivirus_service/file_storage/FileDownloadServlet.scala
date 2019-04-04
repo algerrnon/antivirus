@@ -38,30 +38,30 @@ class FileDownloadServlet extends HttpServlet {
   }
 
   def handle(request: HttpServletRequest, response: HttpServletResponse): Unit = {
-    log.trace("обрабатываем запрос на загрузку оригинала файла")
+    log.trace("process the request to download the original file")
     response.reset()
     val fileId = request.getParameter("fileId")
     if (!fileId.isEmpty) {
       val fileFromStorage = Utils.getFileByBaseDirAndSeparateTempDirName(baseDirectoryForStorageDirs, fileId)
-      log.trace(s"получили файл $fileFromStorage из хранилища")
+      log.trace(s"got file $fileFromStorage from storage")
       if (fileFromStorage.isPresent) {
-        log.trace("отдаем файл клиенту")
+        log.trace("download file")
         downloadFile(fileFromStorage.get(), response)
       }
       else {
-        log.trace(s"файл с указанным идентификатором $fileId не найден в хранилище")
-        makeResponse(response, "не найден файл")
+        log.trace(s" file (fileId=$fileId) is not found")
+        makeResponse(response, "file not found")
       }
 
     } else {
-      log.trace("fileId не заполнен, потому файл не может быть найден")
-      makeResponse(response, "Не заполнен идентификатор файла")
+      log.trace("fileId is empty")
+      makeResponse(response, "fileId is empty")
     }
   }
 
   def downloadFile(file: File, response: HttpServletResponse): Unit = {
     val fileName: String = file.getName
-    log.trace(s"получили имя файла для отправки клиенту $fileName")
+    log.trace(s"got file name = $fileName")
     response.setCharacterEncoding("utf-8")
     //response.setContentType("application/force-download")
     //response.setContentType("application/octet-stream")
@@ -73,17 +73,17 @@ class FileDownloadServlet extends HttpServlet {
     val utf8FileName = URLEncoder.encode(fileName, StandardCharsets.UTF_8.toString).replaceAll("\\+", "%20")
     val contentDisposition = "attachment; filename=\"" + fileName + "\"; filename*=UTF-8''" + utf8FileName
     response.addHeader("Content-Disposition", contentDisposition)
-    log.trace(s"установили заголовки ответа ${ScalaUtils.convertResponseHeadersToString(response)}")
+    log.trace(s"set headers ${ScalaUtils.convertResponseHeadersToString(response)}")
 
     val fileInputStream = new FileInputStream(file)
     val servletOutputStream = response.getOutputStream
     IOUtils.copy(fileInputStream, servletOutputStream)
-    log.trace("завершили копирование файла в выходной поток сервлета")
+    log.trace("finished copying the file to the servlet output stream")
 
     fileInputStream.close()
     servletOutputStream.flush()
     servletOutputStream.close()
-    log.trace("закрыли входой и выходной потоки")
+    log.trace("file input stream is closed, servletOutputStream is closed")
   }
 
   private def makeResponse(response: HttpServletResponse, message: String, code: Int = 0): Unit = {
@@ -94,7 +94,7 @@ class FileDownloadServlet extends HttpServlet {
     response.setHeader("Cache-Control", "no-cache")
     response.getOutputStream.print(JsObject("message" -> JsString(message), "code" -> JsNumber(code)).toString)
     response.flushBuffer //marks response as committed -- if we don't do this the request will go through normally!
-    log.trace("сформировали и вывели ответ клиенту")
+    log.trace("send response to client ")
   }
 
   private def makeResponse(response: HttpServletResponse, throwable: Throwable): Unit = {
