@@ -35,6 +35,8 @@ object Configuration {
 
   def avExtensionsForThreadExtraction: List[String] = avFileExtensionsLists.getStringList("forThreadExtraction").asScala.toList
 
+  def avExtensionsForThreadEmulation: List[String] = avFileExtensionsLists.getStringList("forThreadEmulation").asScala.toList
+
   def avExtensionsForConvertToPdf: List[String] = avFileExtensionsLists.getStringList("forConvertToPdf").asScala.toList
 
 
