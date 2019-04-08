@@ -59,8 +59,10 @@ class Antivirus {
         "features" -> apiFeatures.toJson,
 
         "extraction" ->
-          JsObject("method" -> JsString(extractionMethod),
-            "extracted_parts_codes" -> JsArray()), //todo
+          JsObject("method" -> JsString(extractionMethod)
+            //,
+            //"extracted_parts_codes" -> JsArray()
+          ), //todo
         "te" ->
           JsObject("reports" ->
             JsArray(
@@ -195,8 +197,10 @@ class Antivirus {
           //, JsString(ApiFeatures.ANTIVIRUS)
         ),
         "extraction" ->
-          JsObject("method" -> JsString(extractionMethod),
-            "extracted_parts_codes" -> JsArray(extractedParts)) //todo
+          JsObject("method" -> JsString(extractionMethod)
+            //,
+            //"extracted_parts_codes" -> JsArray(extractedParts) //todo
+          )
       )
     )
 
