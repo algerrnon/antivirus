@@ -72,7 +72,7 @@ public class Utils {
    * @param baseDir
    * @return
    */
-  private static File createTempDirectoryInsideBaseDir(File baseDir) throws CreateTempDirAndTempFileException {
+  public static File createTempDirectoryInsideBaseDir(File baseDir) throws CreateTempDirAndTempFileException {
 
     String baseName = System.currentTimeMillis() + "-";
     //log.trace("базовое имя временной директории {}", baseName);
@@ -137,21 +137,21 @@ public class Utils {
   }
 
   /**
-   * Создаём директорию со случайным уникальным именем внутри директории baseDirectoryForTemporaryDir
-   * Копируем файл sourceFile в созданную директорию.
-   *
-   * @param sourceFile                   исходный файл для копирования
-   * @param baseDirectoryForTemporaryDir базовая директория
+   * Копируем файл sourceFile в директорию targetDir
+   * @param sourceFile исходный файл для копирования
+   * @param targetDir директория в которую должна быть помещена копия файла
    * @return копия исходного файла
    */
-  public static File copyFileToSeparateTempDir(File sourceFile, File baseDirectoryForTemporaryDir) throws IOException, CreateTempDirAndTempFileException {
+  public static File copyFileToDir(File sourceFile, File targetDir) throws IOException, CreateTempDirAndTempFileException {
     File targetFile = null;
     try {
-      targetFile = createNewTempDirAndTempFileInDir(baseDirectoryForTemporaryDir, sourceFile.getName());
-      Files.copy(Paths.get(sourceFile.getPath()), Paths.get(targetFile.getPath()), StandardCopyOption.REPLACE_EXISTING);
-    } catch (CreateTempDirAndTempFileException ex) {
-      log.error("error, creating temporary directory", ex);
-      throw ex;
+      if (targetDir != null && targetDir.exists() && targetDir.isDirectory()) {
+        targetFile = new File(targetDir.getAbsolutePath() + File.separator + sourceFile.getName());
+        Files.copy(Paths.get(sourceFile.getPath()), Paths.get(targetFile.getPath()), StandardCopyOption.REPLACE_EXISTING);
+        log.trace("target file = {}", targetFile);
+      } else {
+        log.trace("target dir == null, not exist, or not directory");
+      }
     } catch (IOException ex) {
       log.error("file copy error", ex);
       throw ex;
@@ -159,7 +159,7 @@ public class Utils {
     if (targetFile != null) {
       return targetFile;
     } else {
-      log.error("failed to create file {}", targetFile.getPath());
+      log.error("failed to create file");
       throw new IllegalStateException("failed to create file");
     }
   }

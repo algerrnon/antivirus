@@ -18,13 +18,13 @@ object Configuration {
   //Messages
   def messagePleaseWait: String = getStringProperty("customNotices.pleaseWait")
 
-  def messageIsSafeFile: String = getStringProperty("customNotices.isSafeFile")
+  def messageIsSafeFileCopy: String = getStringProperty("customNotices.isSafeFileCopy")
+
+  def messageCheckingStartedAndLinkToOriginal: String = getStringProperty("customNotices.checkingStartedAndLinkToOriginal")
 
   def messageIsSafeFileAndLinkToOriginal: String = getStringProperty("customNotices.isSafeFileAndLinkToOriginal")
 
   def messageIsInfectedFile: String = getStringProperty("customNotices.isInfectedFile")
-
-  def messageIsSuspiciousFile: String = getStringProperty("customNotices.isSuspiciousFile")
 
   def messageIsCorruptedFile: String = getStringProperty("customNotices.isCorruptedFile")
 
