@@ -153,8 +153,13 @@ class UploadServlet extends HttpServlet {
     val threadExtraction = antivirus.threadExtractionQueryRetry(originalFile, extractionMethod)
     if (threadExtraction.exists(_.extract_result.equalsIgnoreCase(ExtractResultsStatuses.CP_EXTRACT_RESULT_SUCCESS))) {
       val file: File = downloadFile(originalFile.getName, threadExtraction)
-
+      //Отправляем сообщение"Вам был отправлен файл. Антивирусная система предоставит вам безопасную копию файла")
+      manager.sendCustomNoticeToChat(Configuration.messageIsSafeFileCopy)
+      log.trace("Configuration.messageIsSafeFileCopy")
+      //Полученный очищенный файл направляем получателю
+      val genesysUploadResponse = manager.uploadFileToChat(file)
       log.trace("The received cleared file is sent to the recipient with the message that a secure copy is delivered.")
+
       //Если файл был forThreadEmulation, то в кастомном сообщении должна содержаться ссылка/кнопка запросить оригинал.
       if (forThreadEmulation(fileExtension)) {
         log.trace("forThreadEmulation")
@@ -171,11 +176,6 @@ class UploadServlet extends HttpServlet {
         threadEmulation(manager, originalFile, baseUrl, httpServletResponse)
       }
       else {
-        //если это изображение то оно будет идентично оригиналу и проверять его в песочнице не нужно
-        //Отправляем сообщение"Вам был отправлен файл. Антивирусная система предоставит вам безопасную копию файла")
-        manager.sendCustomNoticeToChat(Configuration.messageIsSafeFileCopy)
-        //Полученный очищенный файл направляем получателю
-        val genesysUploadResponse = manager.uploadFileToChat(file)
         manager.copyGenesysResponseToServletResponse(genesysUploadResponse)
       }
     }

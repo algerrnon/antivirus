@@ -191,7 +191,8 @@ class Antivirus {
         "md5" -> JsString(checksum),
         "file_name" -> JsString(fileName),
         "file_type" -> JsString(fileType),
-        "features" -> JsArray(JsString(ApiFeatures.THREAT_EXTRACTION), JsString(ApiFeatures.ANTIVIRUS)
+        "features" -> JsArray(JsString(ApiFeatures.THREAT_EXTRACTION)
+          //, JsString(ApiFeatures.ANTIVIRUS)
         ),
         "extraction" ->
           JsObject("method" -> JsString(extractionMethod),
@@ -210,11 +211,12 @@ class Antivirus {
 
     response.body match {
       case Left(obj) => {
-        log.warn(s"code=${response.code}; statusText=${response.statusText}")
+        log.warn(s"thread extraction query: code=${response.code}; statusText=${response.statusText}")
         None
       }
       case Right(obj) => {
-        log.info(response.unsafeBody)
+        log.trace("thread extraction query:")
+        log.trace(response.unsafeBody)
         val jsResponse = response.unsafeBody.parseJson.asJsObject.fields("response").asJsObject
         val isOk = jsResponse.fields("status").asJsObject.fields("code").convertTo[Int] == (ApiCodes.FOUND)
         if (isOk) {
