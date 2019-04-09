@@ -1,4 +1,4 @@
-![44](http://alt-devdepot.altuera.local:3000/open-ru/gms-antivirus-service/raw/master/src/main/resources/img/antivirus-swimlanes.png)
+![antivirus swimlanes](./src/main/resources/img/antivirus-swimlanes.png)
 
 ## Описание проекта
 
@@ -120,7 +120,7 @@ http://[genesys-host]:[genesys-port]/genesys/cometd
 где `http://[genesys-host]:[genesys-port]/` получаем из настройки __genesysApi.baseUrl__
 
 #### Проверка файла при помощи Check Point Threat Prevention API
-![thread prevention](http://alt-devdepot.altuera.local:3000/open-ru/gms-antivirus-service/raw/master/src/main/resources/img/threadPrevention.png)
+![thread prevention](./src/main/resources/img/threadPrevention.png)
 
 После отправки customNotice,
 происходит проверка безопасности файла при помощи 
