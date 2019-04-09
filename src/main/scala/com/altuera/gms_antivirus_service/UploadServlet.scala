@@ -67,7 +67,7 @@ class UploadServlet extends HttpServlet {
     try {
       val baseUrl = getBaseUrl(servletRequest)
       log.trace(s"base url = $baseUrl")
-      val manager = new RequestReplyManager(servletRequest, servletResponse)
+      val manager = new RequestFileManager(servletRequest, servletResponse)
       manager.validateServletRequestData()
       val originalFile = manager.getOriginalFile()
       val fileExtension = Utils.extractFileExt(originalFile.getName)
@@ -87,7 +87,7 @@ class UploadServlet extends HttpServlet {
     }
   }
 
-  private def threadEmulation(manager: RequestReplyManager,
+  private def threadEmulation(manager: RequestFileManager,
                               originalFile: File,
                               baseUrl: String,
                               httpServletResponse: HttpServletResponse) = {
@@ -96,10 +96,9 @@ class UploadServlet extends HttpServlet {
     //генеририруем ссылку по которой можно будет загрузить файл
     val storageHttpLink: String = generateStorageHttpLink(baseUrl, storageDir)
     //"Запущена проверка на вирусы оригинала файла. После успешной проверки оригинал файла будет доступен по ссылке"
-    val message = Configuration.messageCheckingStartedAndLinkToOriginal.concat(storageHttpLink)
     log.trace(s"storageHttpLink = $storageHttpLink")
     log.trace("Configuration.messageCheckingStartedAndLinkToOriginal")
-    manager.sendCustomNoticeToChat(message)
+    Configuration.messageCheckingStartedAndLinkToOriginal.map(_.concat(storageHttpLink)).foreach(manager.sendCustomNoticeToChat)
     antivirus.upload(originalFile, List(ApiFeatures.THREAT_EMULATION))
     log.trace("uploaded file to THREAT_EMULATION")
     val emulation: Option[EmulationResultData] = antivirus.threadEmulationQueryRetry(originalFile)
@@ -108,7 +107,7 @@ class UploadServlet extends HttpServlet {
     log.trace("processed emulation result")
   }
 
-  private def processResultEmulation(manager: RequestReplyManager,
+  private def processResultEmulation(manager: RequestFileManager,
                                      originalFile: File,
                                      storageDir: File,
                                      storageHttpLink: String,
@@ -120,7 +119,7 @@ class UploadServlet extends HttpServlet {
       log.trace("negative verdict (not a virus) - send the original document to the GMS")
       //копируем из upload файл в storage и он становится доступен для скачивания по ссылке
       val storageFile = Utils.copyFileToDir(originalFile, storageDir)
-      manager.sendCustomNoticeToChat(Configuration.messageIsSafeFileAndLinkToOriginal.concat(storageHttpLink))
+      Configuration.messageIsSafeFileAndLinkToOriginal.map(_.concat(storageHttpLink)).foreach(manager.sendCustomNoticeToChat)
       log.trace("Configuration.messageIsSafeFileAndLinkToOriginal")
       val genesysUploadResponse = manager.uploadFileToChat(originalFile)
       log.trace(s"file $originalFile loaded into chat")
@@ -129,17 +128,17 @@ class UploadServlet extends HttpServlet {
     } else if (verdict.equalsIgnoreCase(VerdictValues.MALICIOUS)) {
       log.trace("If the verdict is positive (virus), we send custom messages to the recipient and the sender.")
       log.trace("Configuration.messageIsInfectedFile")
-      manager.sendCustomNoticeToChat(Configuration.messageIsInfectedFile)
-      makeErrorResponse(Configuration.messageIsInfectedFile, httpServletResponse)
+      Configuration.messageIsInfectedFile.foreach(manager.sendCustomNoticeToChat)
+      makeErrorResponse(Configuration.messageIsInfectedFile.getOrElse("file is infected"), httpServletResponse)
     } else {
       log.debug(s"emulation did not return the result Verdict = $verdict")
       //что-то пошло не так, например сервис возвращает VerdictValues.UNKNOWN
-      manager.sendCustomNoticeToChat(Configuration.messageFileNotFound)
-      makeErrorResponse(Configuration.messageFileNotFound, httpServletResponse)
+      Configuration.messageFileNotFound.foreach(manager.sendCustomNoticeToChat)
+      makeErrorResponse(Configuration.messageFileNotFound.getOrElse("file not found"), httpServletResponse)
     }
   }
 
-  private def threadExtraction(manager: RequestReplyManager,
+  private def threadExtraction(manager: RequestFileManager,
                                originalFile: File,
                                fileExtension: String,
                                baseUrl: String,
@@ -154,7 +153,7 @@ class UploadServlet extends HttpServlet {
     if (threadExtraction.exists(_.extract_result.equalsIgnoreCase(ExtractResultsStatuses.CP_EXTRACT_RESULT_SUCCESS))) {
       val file: File = downloadFile(originalFile.getName, threadExtraction)
       //Отправляем сообщение"Вам был отправлен файл. Антивирусная система предоставит вам безопасную копию файла")
-      manager.sendCustomNoticeToChat(Configuration.messageIsSafeFileCopy)
+      Configuration.messageIsSafeFileCopy.foreach(manager.sendCustomNoticeToChat)
       log.trace("Configuration.messageIsSafeFileCopy")
       //Полученный очищенный файл направляем получателю
       val genesysUploadResponse = manager.uploadFileToChat(file)
@@ -170,9 +169,9 @@ class UploadServlet extends HttpServlet {
         val storageHttpLink: String = generateStorageHttpLink(baseUrl, storageDir)
 
         //"Запущена проверка на вирусы оригинала файла. После успешной проверки оригинал файла будет доступен по ссылке"
-        val message = Configuration.messageCheckingStartedAndLinkToOriginal.concat(storageHttpLink)
+        val message = Configuration.messageCheckingStartedAndLinkToOriginal.map(_.concat(storageHttpLink))
         log.trace(s"storageHttpLink = $storageHttpLink")
-        manager.sendCustomNoticeToChat(message)
+        message.foreach(manager.sendCustomNoticeToChat)
         threadEmulation(manager, originalFile, baseUrl, httpServletResponse)
       }
       else {
@@ -182,8 +181,8 @@ class UploadServlet extends HttpServlet {
     else {
       log.warn(s"ThreatPrevention API could not perform extraction. Response $threadExtraction")
       log.trace(s"extract_result is not CP_EXTRACT_RESULT_SUCCESS, extracted_file_download_id not defined")
-      manager.sendCustomNoticeToChat(Configuration.messageFileNotFound)
-      makeErrorResponse(Configuration.messageFileNotFound, httpServletResponse)
+      Configuration.messageFileNotFound.foreach(manager.sendCustomNoticeToChat)
+      makeErrorResponse(Configuration.messageFileNotFound.getOrElse("File not found"), httpServletResponse)
     }
 
   }

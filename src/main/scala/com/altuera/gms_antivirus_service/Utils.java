@@ -79,7 +79,7 @@ public class Utils {
 
     for (int counter = 0; counter < TEMP_DIR_ATTEMPTS; counter++) {
       File tempDir = new File(baseDir, baseName + counter);
-      if (tempDir.mkdir()) {
+      if (tempDir.mkdirs()) {
         //log.trace("окончательное имя временной директории {}", tempDir);
         //log.trace("число попыток подбора уникального имени {}", counter + 1);
         return tempDir;

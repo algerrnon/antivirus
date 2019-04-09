@@ -16,14 +16,14 @@ import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.util.{Failure, Success, Try}
 
-object RequestReplyManager {
+object RequestFileManager {
   val baseDirectoryForTemporaryDirs = Utils.createDirIfNotExist(Configuration.uploadBaseDir)
-  val genesysClient = new GenesysApiClient(Configuration.genesysApiBaseUrl)
-
+  val genesysFileUploader = new GenesysFileUploader(Configuration.genesysApiBaseUrl)
+  val genesysMessenger = new GenesysMessenger(Configuration.genesysApiBaseUrl)
 }
 
-class RequestReplyManager(request: HttpServletRequest,
-                          servletResponse: HttpServletResponse) {
+class RequestFileManager(request: HttpServletRequest,
+                         servletResponse: HttpServletResponse) {
 
   private val log = LoggerFactory.getLogger(this.getClass)
   private val data: Data = getServletRequestData()
@@ -31,10 +31,9 @@ class RequestReplyManager(request: HttpServletRequest,
   def sendCustomNoticeToChat(message: String): Unit = {
     val id = String.valueOf(UUID.randomUUID)
     log.trace(s"id=$id")
-    val cookieHeaderValue = data.requestHeaders
-      .getOrElse("cookie", throw new SendCustomNoticeException("cookie header is empty"))
+    val cookieHeaderValue = data.requestHeaders.get("cookie")
     log.trace(s" cookie header = $cookieHeaderValue")
-    val success = RequestReplyManager.genesysClient.sendCustomNotice(
+    val success = RequestFileManager.genesysMessenger.sendCustomNotice(
       id,
       data.clientId,
       message,
@@ -51,7 +50,7 @@ class RequestReplyManager(request: HttpServletRequest,
   def uploadFileToChat(file: File): Response[String] = {
     val cookieHeaderValue = data.requestHeaders
       .getOrElse("cookie", throw new UploadFileToChatException("cookie header is empty"))
-    RequestReplyManager.genesysClient.uploadFileToChat(file, data.secureKey, cookieHeaderValue)
+    RequestFileManager.genesysFileUploader.uploadFileToChat(file, data.secureKey, cookieHeaderValue)
   }
 
   def copyGenesysResponseToServletResponse(genesysFileUploadResponse: Response[String]): Unit = {
@@ -164,7 +163,7 @@ class RequestReplyManager(request: HttpServletRequest,
     log.trace("Content type: " + contentType)
     log.trace(s"stream available data -> ${stream.available()} octets")
     // creates the temp directory and temp file
-    val tempFile: File = Utils.createNewTempDirAndTempFileInDir(RequestReplyManager.baseDirectoryForTemporaryDirs, fileName)
+    val tempFile: File = Utils.createNewTempDirAndTempFileInDir(RequestFileManager.baseDirectoryForTemporaryDirs, fileName)
     FileUtils.copyInputStreamToFile(stream, tempFile)
     log.trace(s"copy input stream to file. tempFile= $tempFile")
     stream.close()
