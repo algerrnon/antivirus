@@ -16,19 +16,19 @@ object Configuration {
   def genesysApiBaseUrl: String = getStringProperty("genesysApi.baseUrl")
 
   //Messages
-  def messagePleaseWait: String = getStringProperty("customNotices.pleaseWait")
+  def messagePleaseWait: Option[String] = getStringOpt("customNotices.pleaseWait")
 
-  def messageIsSafeFileCopy: String = getStringProperty("customNotices.isSafeFileCopy")
+  def messageIsSafeFileCopy: Option[String] = getStringOpt("customNotices.isSafeFileCopy")
 
-  def messageCheckingStartedAndLinkToOriginal: String = getStringProperty("customNotices.checkingStartedAndLinkToOriginal")
+  def messageCheckingStartedAndLinkToOriginal: Option[String] = getStringOpt("customNotices.checkingStartedAndLinkToOriginal")
 
-  def messageIsSafeFileAndLinkToOriginal: String = getStringProperty("customNotices.isSafeFileAndLinkToOriginal")
+  def messageIsSafeFileAndLinkToOriginal: Option[String] = getStringOpt("customNotices.isSafeFileAndLinkToOriginal")
 
-  def messageIsInfectedFile: String = getStringProperty("customNotices.isInfectedFile")
+  def messageIsInfectedFile: Option[String] = getStringOpt("customNotices.isInfectedFile")
 
-  def messageIsCorruptedFile: String = getStringProperty("customNotices.isCorruptedFile")
+  def messageIsCorruptedFile: Option[String] = getStringOpt("customNotices.isCorruptedFile")
 
-  def messageFileNotFound: String = getStringProperty("customNotices.fileNotFound")
+  def messageFileNotFound: Option[String] = getStringOpt("customNotices.fileNotFound")
 
   //File types
   private val avFileExtensionsLists = config.getConfig("avApi.fileExtensionsLists")
@@ -54,10 +54,9 @@ object Configuration {
 
   def avRetryMaxNumberOfTimes: Int = getIntProperty("avApi.retry.maxNumberOfTimes")
 
-  //Antiviry proxy
-  def avProxyHost: String = getStringProperty("avApi.proxyHost")
-
-  def avProxyPort: Int = getIntProperty("avApi.proxyPort")
+  private def getStringOpt(path: String): Option[String] = {
+    Some(path).filter(config.hasPath).map(config.getString)
+  }
 
   private def getStringProperty(path: String): String = {
     Some(path)
